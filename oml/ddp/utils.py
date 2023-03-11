@@ -27,9 +27,9 @@ def merge_list_of_dicts(list_of_dicts: List[Dict[str, Any]], device: torch.devic
         assert all(
             isinstance(v, available_types) for v in dict_sample.values()
         ), f"Only '{available_types}' are available for merging"
-        assert set((k, type(v)) for k, v in list_of_dicts[0].items()) == set(
+        assert {(k, type(v)) for k, v in list_of_dicts[0].items()} == {
             (k, type(v)) for k, v in dict_sample.items()
-        ), "Dictionaries in list have to have same keys with same types of values"
+        }, "Dictionaries in list have to have same keys with same types of values"
 
     output = {}
 
@@ -88,10 +88,7 @@ def get_world_size_safe() -> int:
 
 
 def is_main_process() -> bool:
-    if is_ddp():
-        return get_rank() == 0
-    else:
-        return True
+    return get_rank() == 0 if is_ddp() else True
 
 
 __all__ = ["is_ddp", "sync_dicts_ddp", "merge_list_of_dicts", "is_main_process"]

@@ -56,16 +56,14 @@ def download_file_from_url(url: str, fname: Optional[str] = None, timeout: float
     assert validators.url(url), "Invalid URL"
     response = requests.get(url, timeout=timeout)
 
-    if response.status_code == 200:
-        if fname is not None:
-            Path(fname).parent.mkdir(parents=True, exist_ok=True)
-            with open(fname, "wb+") as f:
-                f.write(response.content)
-            return None
-        else:
-            return response.content
-    else:
+    if response.status_code != 200:
         raise RuntimeError(f"Can not download file from '{url}'")
+    if fname is None:
+        return response.content
+    Path(fname).parent.mkdir(parents=True, exist_ok=True)
+    with open(fname, "wb+") as f:
+        f.write(response.content)
+    return None
 
 
 def download_checkpoint_one_of(
@@ -78,9 +76,7 @@ def download_checkpoint_one_of(
     if not isinstance(url_or_fid_list, (tuple, list)):
         url_or_fid_list = [url_or_fid_list]
 
-    attempt = 0
-    for url_or_fid in url_or_fid_list:
-        attempt += 1
+    for attempt, url_or_fid in enumerate(url_or_fid_list, start=1):
         print(url_or_fid)
         try:
             return download_checkpoint(url_or_fid, hash_md5, fname)
@@ -104,7 +100,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     """
     CKPT_SAVE_ROOT.mkdir(exist_ok=True, parents=True)
 
-    fname = fname if fname else Path(url_or_fid).name
+    fname = fname or Path(url_or_fid).name
     save_path = str(CKPT_SAVE_ROOT / fname)
 
     if Path(save_path).exists():
@@ -125,7 +121,7 @@ def download_checkpoint(url_or_fid: str, hash_md5: str, fname: Optional[str] = N
     if not calc_file_hash(save_path).startswith(hash_md5):
         raise Exception("Downloaded checkpoint is probably broken. " "Hash values don't match.")
 
-    return str(save_path)
+    return save_path
 
 
 __all__ = [

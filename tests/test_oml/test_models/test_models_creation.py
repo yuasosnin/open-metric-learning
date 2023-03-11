@@ -52,8 +52,6 @@ def test_creation(
         net = ResnetExtractor.from_pretrained("resnet18_imagenet_v1")
         net(torch.randn(1, 3, 224, 224))
 
-    assert True
-
 
 @pytest.mark.parametrize(
     "constructor,args,default_arch",

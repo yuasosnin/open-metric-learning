@@ -90,7 +90,7 @@ class DistinctCategoryBalanceSampler(IBatchSampler):
             raise ValueError(f"must be not less than 1, {n_instances} given")
         if any(label not in label2category.keys() for label in unique_labels):
             raise ValueError("All the labels must have category")
-        if any(label not in unique_labels for label in label2category.keys()):
+        if any(label not in unique_labels for label in label2category):
             raise ValueError("All the labels from label2category mapping must be in the labels")
         if any(n <= 1 for n in Counter(labels).values()):
             raise ValueError("Each class must contain at least 2 instances to fit")

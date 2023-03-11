@@ -197,16 +197,15 @@ class EmbeddingMetrics(IMetricVisualisable):
         }
         args_topological_metrics = {"pfc_variance": self.pfc_variance}
 
-        metrics: TMetricsDict_ByLabels = dict()
-
-        # note, here we do micro averaging
-        metrics[self.overall_categories_key] = calc_retrieval_metrics(
-            distances=self.distance_matrix,
-            mask_gt=self.mask_gt,
-            reduce=False,
-            mask_to_ignore=None,  # we already applied it
-            **args_retrieval_metrics,  # type: ignore
-        )
+        metrics: TMetricsDict_ByLabels = {
+            self.overall_categories_key: calc_retrieval_metrics(
+                distances=self.distance_matrix,
+                mask_gt=self.mask_gt,
+                reduce=False,
+                mask_to_ignore=None,
+                **args_retrieval_metrics
+            )
+        }
 
         embeddings = self.acc.storage[self.embeddings_key]
         metrics[self.overall_categories_key].update(calc_topological_metrics(embeddings, **args_topological_metrics))
@@ -295,7 +294,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         query_paths = np.array(self.acc.storage[PATHS_KEY])[is_query]
         gallery_paths = np.array(self.acc.storage[PATHS_KEY])[is_gallery]
 
-        if all([k in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+        if all(k in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]):
             bboxes = list(
                 zip(
                     self.acc.storage[X1_KEY],
@@ -304,7 +303,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                     self.acc.storage[Y2_KEY],
                 )
             )
-        elif all([k not in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]]):
+        elif all(
+            k not in self.acc.storage for k in [X1_KEY, X2_KEY, Y1_KEY, Y2_KEY]
+        ):
             fake_coord = np.array([float("nan")] * len(is_query))
             bboxes = list(zip(fake_coord, fake_coord, fake_coord, fake_coord))
         else:
@@ -360,7 +361,9 @@ class EmbeddingMetrics(IMetricVisualisable):
                 )
                 img = get_img_with_bbox(gallery_paths[gt_idx], gallery_bboxes[gt_idx], GRAY)
                 img = square_pad(img)
-                plt.title("GT " + str(round(self.distance_matrix[query_idx, gt_idx].item(), 3)))
+                plt.title(
+                    f"GT {str(round(self.distance_matrix[query_idx, gt_idx].item(), 3))}"
+                )
                 plt.imshow(img)
                 plt.axis("off")
 

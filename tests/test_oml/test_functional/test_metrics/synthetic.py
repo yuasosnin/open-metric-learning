@@ -107,11 +107,10 @@ def generate_retrieval_case(
 
     if return_desired_correct_positions:
         return desired_correct_positions, labels, is_query, is_gallery
-    else:
-        distances = generate_distance_matrix(
-            desired_correct_positions, labels=labels, is_query=is_query, is_gallery=is_gallery
-        )
-        return distances, labels, is_query, is_gallery
+    distances = generate_distance_matrix(
+        desired_correct_positions, labels=labels, is_query=is_query, is_gallery=is_gallery
+    )
+    return distances, labels, is_query, is_gallery
 
 
 def generate_distance_matrix(
@@ -148,12 +147,12 @@ def generate_distance_matrix(
     assert all(len(pos) < num_gallery for pos in correct_positions_array)
 
     for idx, (pos, q_in_g) in enumerate(zip(correct_positions_array, q_in_g_array)):
-        if not all(idx < num_gallery - int(q_in_g) for idx in pos):
+        if any(idx >= num_gallery - int(q_in_g) for idx in pos):
             raise ValueError(
                 f"Desired ids are greater than available number of galleries for "
                 f"label_idx={query_ids[idx].item()}, desired_positions={pos}"
             )
-        if not (len(pos) < (num_gallery - int(q_in_g))):
+        if len(pos) >= num_gallery - int(q_in_g):
             raise ValueError(
                 f"Desired number of ids are greater than available number of galleries for "
                 f"label_idx={query_ids[idx].item()}, desired_positions={pos}"

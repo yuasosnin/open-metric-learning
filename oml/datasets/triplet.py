@@ -74,8 +74,7 @@ class TriDataset(Dataset):
 
     def get_image(self, path: Union[Path, str]) -> np.ndarray:
         image_bytes = self.read_bytes_image(path)  # type: ignore
-        image = self.f_imread(image_bytes)
-        return image
+        return self.f_imread(image_bytes)
 
     def __len__(self) -> int:
         return int((1 + self.expand_ratio) * len(self.triplets))
@@ -100,11 +99,10 @@ class TriDataset(Dataset):
 
 
 def tri_collate(items: List[TItem]) -> Dict[str, Any]:
-    batch = dict()
-
-    for key in (INPUT_TENSORS_KEY,):
-        batch[key] = torch.stack(list(chain(*[item[key] for item in items])))
-
+    batch = {
+        key: torch.stack(list(chain(*[item[key] for item in items])))
+        for key in (INPUT_TENSORS_KEY,)
+    }
     for key in ("tri_ids", "images"):
         if key in items[0].keys():
             batch[key] = list(chain(*[item[key] for item in items]))

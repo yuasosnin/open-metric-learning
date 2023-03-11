@@ -53,7 +53,7 @@ def test_metrics_is_similar_in_ddp(num_labels: int, atol: float, batch_size: int
             f"--num_labels {num_labels} "
             f"--batch_size {batch_size}"
         )
-        cmd = f"python {exp_file} " + params
+        cmd = f"python {exp_file} {params}"
         subprocess.run(cmd, check=True, shell=True)
 
         metrics_path = MetricValCallbackWithSaving.save_path_pattern.format(

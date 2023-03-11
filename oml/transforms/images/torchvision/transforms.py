@@ -5,7 +5,7 @@ from oml.const import MEAN, STD, TNormParam
 
 
 def get_augs_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> t.Compose:
-    augs = t.Compose(
+    return t.Compose(
         [
             t.Resize(size=(im_size, im_size), antialias=True),
             t.RandomHorizontalFlip(),
@@ -14,27 +14,29 @@ def get_augs_torch(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD)
             t.Normalize(mean=mean, std=std),
         ]
     )
-    return augs
 
 
 def get_augs_hypvit(
     im_size: int = 224, min_scale: float = 0.2, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> t.Compose:
-    augs = t.Compose(
+    return t.Compose(
         [
-            t.RandomResizedCrop(im_size, scale=(min_scale, 1.0), interpolation=InterpolationMode.BICUBIC),
+            t.RandomResizedCrop(
+                im_size,
+                scale=(min_scale, 1.0),
+                interpolation=InterpolationMode.BICUBIC,
+            ),
             t.RandomHorizontalFlip(),
             t.ToTensor(),
             t.Normalize(mean=mean, std=std),
         ]
     )
-    return augs
 
 
 def get_normalisation_resize_hypvit(
     im_size: int = 224, crop_size: int = 224, mean: TNormParam = MEAN, std: TNormParam = STD
 ) -> t.Compose:
-    transforms = t.Compose(
+    return t.Compose(
         [
             t.Resize(im_size, interpolation=InterpolationMode.BICUBIC),
             t.CenterCrop(crop_size),
@@ -42,7 +44,6 @@ def get_normalisation_resize_hypvit(
             t.Normalize(mean=mean, std=std),
         ]
     )
-    return transforms
 
 
 def get_normalisation_torch(mean: TNormParam = MEAN, std: TNormParam = STD) -> Compose:

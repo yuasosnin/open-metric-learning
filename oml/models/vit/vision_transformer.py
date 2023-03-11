@@ -77,8 +77,7 @@ def drop_path(x, drop_prob: float = 0.0, training: bool = False):
     shape = (x.shape[0],) + (1,) * (x.ndim - 1)  # work with diff dim tensors, not just 2D ConvNets
     random_tensor = keep_prob + torch.rand(shape, dtype=x.dtype, device=x.device)
     random_tensor.floor_()  # binarize
-    output = x.div(keep_prob) * random_tensor
-    return output
+    return x.div(keep_prob) * random_tensor
 
 
 class DropPath(nn.Module):
@@ -320,7 +319,7 @@ class VisionTransformer(nn.Module):
 
 
 def vit_tiny(patch_size=16, **kwargs):
-    model = VisionTransformer(
+    return VisionTransformer(
         patch_size=patch_size,
         embed_dim=192,
         depth=12,
@@ -330,11 +329,10 @@ def vit_tiny(patch_size=16, **kwargs):
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs
     )
-    return model
 
 
 def vit_small(patch_size=16, **kwargs):
-    model = VisionTransformer(
+    return VisionTransformer(
         patch_size=patch_size,
         embed_dim=384,
         depth=12,
@@ -344,11 +342,10 @@ def vit_small(patch_size=16, **kwargs):
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs
     )
-    return model
 
 
 def vit_base(patch_size=16, **kwargs):
-    model = VisionTransformer(
+    return VisionTransformer(
         patch_size=patch_size,
         embed_dim=768,
         depth=12,
@@ -358,7 +355,6 @@ def vit_base(patch_size=16, **kwargs):
         norm_layer=partial(nn.LayerNorm, eps=1e-6),
         **kwargs
     )
-    return model
 
 
 class DINOHead(nn.Module):
@@ -390,8 +386,8 @@ class DINOHead(nn.Module):
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
-                nn.init.constant_(m.bias, 0)
+        if isinstance(m, nn.Linear) and m.bias is not None:
+            nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
         x = self.mlp(x)

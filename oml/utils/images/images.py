@@ -4,7 +4,7 @@ from typing import Callable, Union
 
 try:
     from albumentations.augmentations.functional import pad
-except (AttributeError, ModuleNotFoundError, ImportError):
+except (AttributeError, ImportError):
     from albumentations.augmentations.geometric.functional import pad
 
 import cv2
@@ -28,9 +28,7 @@ def tensor_to_numpy_image(img: torch.Tensor) -> np.ndarray:
     img /= img.max()
     img *= 255
 
-    img = img.astype(np.uint8)
-
-    return img
+    return img.astype(np.uint8)
 
 
 def imread_cv2(im_src: Union[Path, str, bytes]) -> np.ndarray:

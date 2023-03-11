@@ -123,11 +123,8 @@ def check_patching_balance_batch_sampler(
 
     outputs_from_epochs = []
 
-    for epoch in range(3):
-        outputs = []
-        for batch in loader_ddp:
-            outputs.append(batch)
-
+    for _ in range(3):
+        outputs = list(loader_ddp)
         outputs_from_epochs.append(outputs)
 
         seq_outputs = list(chain(*outputs))
@@ -185,7 +182,7 @@ def check_patching_seq_sampler(
 
     outputs_from_epochs = []
 
-    for epoch in range(2):
+    for _ in range(2):
         outputs = []
         for batch in loader_ddp:
             outputs.extend(batch)

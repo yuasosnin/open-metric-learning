@@ -104,14 +104,12 @@ def extract_loader_parameters(loader: DataLoader, ignore_data_related_parameters
     if ignore_data_related_parameters:
         ignore_fields.extend(["sampler", "batch_sampler", "drop_last", "shuffle", "batch_size", "dataset"])
 
-    extracted = {}
-
     signature = inspect.signature(DataLoader.__init__)
-    for parameter in signature.parameters:
-        if parameter not in ignore_fields:
-            if hasattr(loader, parameter):
-                extracted[parameter] = getattr(loader, parameter)
-
+    extracted = {
+        parameter: getattr(loader, parameter)
+        for parameter in signature.parameters
+        if parameter not in ignore_fields and hasattr(loader, parameter)
+    }
     assert len(extracted)
 
     return extracted
@@ -163,11 +161,13 @@ def patch_dataloader_to_ddp(loader: DataLoader) -> DataLoader:
 def check_loaders_is_patched(loaders: Union[DataLoader, Sequence[DataLoader]]) -> bool:
     loaders = [loaders] if isinstance(loaders, DataLoader) else loaders
 
-    for loader in loaders:
-        if not any(isinstance(sampler, DDPSamplerWrapper) for sampler in [loader.batch_sampler, loader.sampler]):
-            return False
-
-    return True
+    return all(
+        any(
+            isinstance(sampler, DDPSamplerWrapper)
+            for sampler in [loader.batch_sampler, loader.sampler]
+        )
+        for loader in loaders
+    )
 
 
 __all__ = [

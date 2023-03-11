@@ -88,11 +88,14 @@ def test_top_miner_with_bank(
         )
         bank_triplets = torch.cat([bank_a, bank_p, bank_n], dim=1)
 
-        counter_same_triplets = 0
-
-        for bank_triplet in bank_triplets:
-            counter_same_triplets += torch.any(torch.isclose(bank_triplet.unsqueeze(0), miner_triplets, atol=1e-6))
-
+        counter_same_triplets = sum(
+            torch.any(
+                torch.isclose(
+                    bank_triplet.unsqueeze(0), miner_triplets, atol=1e-6
+                )
+            )
+            for bank_triplet in bank_triplets
+        )
         assert len_triplet_bank == counter_same_triplets
 
 

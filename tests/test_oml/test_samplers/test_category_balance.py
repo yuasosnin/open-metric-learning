@@ -48,7 +48,7 @@ def generate_valid_categories_labels(num: int, guarantee_enough_labels: bool = T
                 # process last segment of labels
                 if len(labels_subset) == 1:
                     cat -= 1
-            label2category.update({label: cat for label in labels_subset})
+            label2category |= {label: cat for label in labels_subset}
             idx = new_idx
             cat += 1
         labels = []
@@ -80,16 +80,18 @@ def get_valid_batch_params(labels: List[int], label2category: Dict[int, int]) ->
 def input_for_category_balance_batch_sampler_few_labels() -> TLabelsWithMapping:
     # (julia-shenshina) It was checked once with N = 100_000 before doing the PR
     num_random_cases = 100
-    input_cases = generate_valid_categories_labels(num_random_cases, guarantee_enough_labels=False)
-    return input_cases
+    return generate_valid_categories_labels(
+        num_random_cases, guarantee_enough_labels=False
+    )
 
 
 @pytest.fixture()
 def input_for_category_balance_batch_sampler() -> TLabelsWithMapping:
     # (julia-shenshina) It was checked once with N = 100_000 before doing the PR
     num_random_cases = 100
-    input_cases = generate_valid_categories_labels(num_random_cases, guarantee_enough_labels=True)
-    return input_cases
+    return generate_valid_categories_labels(
+        num_random_cases, guarantee_enough_labels=True
+    )
 
 
 def check_category_balance_batch_sampler_epoch(
@@ -109,7 +111,7 @@ def check_category_balance_batch_sampler_epoch(
         assert len(batch_ids) == sampler.n_labels * sampler.n_categories * sampler.n_instances
 
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
-        batch_categories = set(label2category[label] for label in batch_labels)
+        batch_categories = {label2category[label] for label in batch_labels}
 
         # check that we sampled n_categories at all the batches
         assert len(batch_categories) == sampler.n_categories
@@ -174,8 +176,6 @@ def test_category_batch_sampler_resample_raises(sampler_class: Any, sampler_kwar
             **sampler_kwargs
         )
 
-    assert True
-
 
 @pytest.mark.parametrize(
     "fixture_name,resample_labels",
@@ -209,8 +209,6 @@ def test_category_balance_batch_sampler(
             epoch_size=math.ceil(len(set(labels)) / n_labels),
         )
 
-    assert True
-
 
 def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_sampler: TLabelsWithMapping) -> None:
     """
@@ -236,8 +234,6 @@ def test_category_balance_batch_sampler_policy(input_for_category_balance_batch_
             resample_labels=False,
             epoch_size=math.ceil(len(set(labels)) / n_labels),
         )
-
-    assert True
 
 
 @pytest.mark.parametrize(
@@ -269,8 +265,6 @@ def test_distinct_category_balance_batch_sampler(
             resample_labels=True,
             epoch_size=epoch_size,
         )
-
-    assert True
 
 
 @pytest.mark.parametrize(

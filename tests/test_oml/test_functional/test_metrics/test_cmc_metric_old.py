@@ -31,8 +31,12 @@ def cmc_score(
     mask_to_ignore: Optional[Tensor] = None,
 ) -> float:
     distances = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
-    val = cmc_score_count(distances=distances, mask_gt=mask_gt, topk=topk, mask_to_ignore=mask_to_ignore)
-    return val
+    return cmc_score_count(
+        distances=distances,
+        mask_gt=mask_gt,
+        topk=topk,
+        mask_to_ignore=mask_to_ignore,
+    )
 
 
 EPS = 1e-4

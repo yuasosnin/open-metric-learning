@@ -123,7 +123,7 @@ def calc_topological_metrics(embeddings: Tensor, pfc_variance: Tuple[float, ...]
         Metrics dictionary.
 
     """
-    metrics: TMetricsDict = dict()
+    metrics: TMetricsDict = {}
 
     if pfc_variance:
         main_components = calc_pcf(embeddings, pfc_variance)
@@ -165,9 +165,7 @@ def calc_gt_mask(
     gallery_mask = is_gallery == 1
     query_labels = labels[query_mask]
     gallery_labels = labels[gallery_mask]
-    gt_mask = query_labels[..., None] == gallery_labels[None, ...]
-
-    return gt_mask
+    return query_labels[..., None] == gallery_labels[None, ...]
 
 
 def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]) -> Tensor:
@@ -179,9 +177,7 @@ def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[n
 
     ids_query = torch.nonzero(is_query).squeeze()
     ids_gallery = torch.nonzero(is_gallery).squeeze()
-    mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
-
-    return mask_to_ignore
+    return ids_query[..., None] == ids_gallery[None, ...]
 
 
 def calc_distance_matrix(
@@ -198,9 +194,7 @@ def calc_distance_matrix(
     query_embeddings = embeddings[query_mask]
     gallery_embeddings = embeddings[gallery_mask]
 
-    distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
-
-    return distance_matrix
+    return pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
 
 
 def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
@@ -214,10 +208,7 @@ def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True)
 
     acc = (pos_dists < neg_dists).float()
 
-    if reduce_mean:
-        return acc.mean()
-    else:
-        return acc
+    return acc.mean() if reduce_mean else acc
 
 
 def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
@@ -254,10 +245,7 @@ def calc_cmc(gt_tops: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
     """
     check_if_nonempty_positive_integers(top_k, "top_k")
     top_k = _clip_max_with_warning(top_k, gt_tops.shape[1])
-    cmc = []
-    for k in top_k:
-        cmc.append(torch.any(gt_tops[:, :k], dim=1).float())
-    return cmc
+    return [torch.any(gt_tops[:, :k], dim=1).float() for k in top_k]
 
 
 def calc_precision(gt_tops: Tensor, n_gt: Tensor, top_k: Tuple[int, ...]) -> List[Tensor]:
@@ -479,8 +467,7 @@ def calc_fnmr_at_fmr(pos_dist: Tensor, neg_dist: Tensor, fmr_vals: Tuple[float, 
     """
     _check_if_in_range(fmr_vals, 0, 1, "fmr_vals")
     thresholds = torch.from_numpy(np.quantile(neg_dist.cpu().numpy(), fmr_vals)).to(pos_dist)
-    fnmr_at_fmr = (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
-    return fnmr_at_fmr
+    return (pos_dist[None, :] >= thresholds[:, None]).sum(axis=1) / len(pos_dist)
 
 
 def calc_pcf(embeddings: Tensor, pfc_variance: Tuple[float, ...]) -> List[Tensor]:

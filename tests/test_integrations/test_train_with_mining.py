@@ -33,15 +33,7 @@ class DummyDataset(IDatasetWithLabels):
         return np.array(self.labels)
 
 
-@pytest.mark.parametrize(
-    "miner_name,miner_params",
-    [
-        ("hard_triplets", dict()),
-        ("all_triplets", dict()),
-        ("hard_cluster", dict()),
-        ("triplets_with_memory", {"bank_size_in_batches": 5, "tri_expand_k": 3}),
-    ],
-)
+@pytest.mark.parametrize("miner_name,miner_params", [("hard_triplets", {}), ("all_triplets", {}), ("hard_cluster", {}), ("triplets_with_memory", {"bank_size_in_batches": 5, "tri_expand_k": 3})])
 @pytest.mark.parametrize("margin", [None, 0.5])
 @pytest.mark.parametrize("n_labels,n_instances", [(2, 2), (5, 6)])
 def test_train_with_mining(
@@ -74,9 +66,8 @@ def test_train_with_mining(
         if isinstance(miner, TripletMinerWithMemory) and (i < miner.bank_size_in_batches):
             # we cannot guarantee any values of loss due to impact of memory bank initialisation
             continue
+        if margin is None:
+            # soft triplet loss
+            assert loss.isclose(torch.log1p(torch.exp(torch.tensor(-math.sqrt(2)))), atol=1e-6)
         else:
-            if margin is None:
-                # soft triplet loss
-                assert loss.isclose(torch.log1p(torch.exp(torch.tensor(-math.sqrt(2)))), atol=1e-6)
-            else:
-                assert loss.isclose(torch.tensor(0.0))
+            assert loss.isclose(torch.tensor(0.0))

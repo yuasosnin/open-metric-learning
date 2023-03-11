@@ -62,7 +62,7 @@ class DummyModule(ModuleDDP):
         return batch
 
     def check_and_save_ids(self, outputs: EPOCH_OUTPUT, mode: str) -> None:
-        assert mode in ("train", "val")
+        assert mode in {"train", "val"}
         world_size = self.trainer.world_size
 
         ids_batches = [[int(idx_str[:-2]) for idx_str in batch_dict["tri_ids"][::3]] for batch_dict in outputs]
@@ -71,7 +71,7 @@ class DummyModule(ModuleDDP):
         ids_flatten_synced = sync_dicts_ddp({"ids_flatten": ids_flatten}, world_size)["ids_flatten"]
         assert len(ids_flatten_synced) == len(ids_flatten) * world_size == len(set(ids_flatten_synced))
 
-        ids_per_step = {step: ids for step, ids in enumerate(ids_batches)}
+        ids_per_step = dict(enumerate(ids_batches))
         ids_per_step_synced = sync_dicts_ddp(ids_per_step, world_size)  # type: ignore
         ids_per_step_synced = {step: sorted(synced_ids) for step, synced_ids in ids_per_step_synced.items()}
 

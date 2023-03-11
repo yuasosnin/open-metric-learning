@@ -60,15 +60,16 @@ def test_registry(folder_name, registry, factory_fun, runtime_args) -> None:
         args = cfg["args"]
 
         # this case is special since only 2 schedulers have "lr_lambda" param which is not in defaults
-        if (folder_name == "scheduler") and (obj_name == "lambda" or obj_name == "multiplicative"):
+        if folder_name == "scheduler" and obj_name in [
+            "lambda",
+            "multiplicative",
+        ]:
             args["lr_lambda"] = lambda epoch: 0.9
 
         if runtime_args is not None:
             args = dict(**args, **runtime_args)
 
         factory_fun(cfg["name"], **args)
-
-    assert True
 
 
 @pytest.mark.parametrize(

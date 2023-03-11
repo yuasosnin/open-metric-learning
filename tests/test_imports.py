@@ -54,9 +54,7 @@ def find_imports_in_script(fname: Path) -> List[str]:
     with open(fname, "r") as f:
         script_code = f.read()
 
-    imports = find_imports(script_code)
-
-    return imports
+    return find_imports(script_code)
 
 
 def find_imports_in_notebook(fname: Path) -> List[str]:
@@ -71,9 +69,7 @@ def find_imports_in_notebook(fname: Path) -> List[str]:
     code_lines = filter(lambda x: not (x.startswith("%") or x.startswith("!")), code_lines)
 
     notebook_code = "".join(code_lines)
-    imports = find_imports(notebook_code)
-
-    return imports
+    return find_imports(notebook_code)
 
 
 def find_imports(code: str) -> List[str]:
@@ -90,7 +86,5 @@ def find_imports(code: str) -> List[str]:
 
 @pytest.mark.parametrize("file,lib", get_imports_from_files())
 def test_project_imports(file: str, lib: str) -> None:
-    if any(lib.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
-        pass
-    else:
+    if not any(lib.startswith(ignore_lib) for ignore_lib in LIBS_TO_IGNORE):
         importlib.import_module(lib)

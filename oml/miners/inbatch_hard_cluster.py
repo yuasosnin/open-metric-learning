@@ -35,7 +35,7 @@ class HardClusterMiner(ITripletsMiner):
         """
         labels_counter = Counter(labels)
         n_instances = labels_counter[labels[0]]
-        if not all(n == n_instances for n in labels_counter.values()):
+        if any(n != n_instances for n in labels_counter.values()):
             raise ValueError("Expected equal number of samples for each label")
         if len(labels_counter) <= 1:
             raise ValueError("Expected at least 2 labels in the batch")
@@ -84,9 +84,7 @@ class HardClusterMiner(ITripletsMiner):
         n_labels, n_instances, embed_dim = embeddings.shape
         # Create (n_labels, n_instances, embed_dim) tensor of mean vectors for each label
         mean_vectors = mean_vectors.unsqueeze(1).repeat((1, n_instances, 1))
-        # Count euclidean distance between embeddings and mean vectors
-        distances = torch.pow(embeddings - mean_vectors, 2).sum(2)
-        return distances
+        return torch.pow(embeddings - mean_vectors, 2).sum(2)
 
     @staticmethod
     def _count_inter_label_distances(mean_vectors: Tensor) -> Tensor:
@@ -101,8 +99,7 @@ class HardClusterMiner(ITripletsMiner):
             Tensor with the shape of ``[n_labels, n_labels]`` -- matrix of distances between mean vectors
 
         """
-        distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
-        return distance
+        return pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
 
     @staticmethod
     def _fill_diagonal(matrix: Tensor, value: float) -> Tensor:

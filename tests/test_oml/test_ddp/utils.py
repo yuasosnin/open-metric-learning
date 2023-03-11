@@ -8,9 +8,7 @@ from oml.utils.misc import set_global_seed
 
 
 def init_ddp(rank: int, world_size: int) -> None:
-    if world_size == 0:
-        pass
-    else:
+    if world_size != 0:
         init_process_group("gloo", rank=rank, world_size=world_size, init_method=f"file://{TMP_PATH / 'ddp'}")
     set_global_seed(1)
 

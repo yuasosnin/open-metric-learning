@@ -125,8 +125,7 @@ class MinerWithBank(ITripletsMiner):
             ids_anchor2positives[anch].add(int(pos))
             ids_anchor2negatives[anch].add(int(neg))
 
-        for anch in ids_anchor2positives.keys():
-            positives = ids_anchor2positives[anch]
+        for anch, positives in ids_anchor2positives.items():
             positives_from_bank = ignore_anchor_mask[list(positives)].sum().item()
             positives_from_batch = len(positives) - positives_from_bank
             logs.update({"positives_from_bank": positives_from_bank, "positives_from_batch": positives_from_batch})

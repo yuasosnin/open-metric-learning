@@ -53,4 +53,4 @@ def check_all_triplets_number(labels: List[int], num_selected_tri: int, max_tri:
 
     """
     n_all_tri = calc_n_triplets(labels=labels)
-    assert num_selected_tri == n_all_tri or num_selected_tri == max_tri
+    assert num_selected_tri in [n_all_tri, max_tri]
