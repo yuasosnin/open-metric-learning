@@ -20,12 +20,11 @@ MINERS_REGISTRY = {
 
 
 def get_miner(name: str, **kwargs: Dict[str, Any]) -> ITripletsMiner:
-    if "miner" in kwargs:
-        miner = get_miner_by_cfg(kwargs["miner"].copy())
-        del kwargs["miner"]
-        return MINERS_REGISTRY[name](miner=miner, **kwargs)
-    else:
+    if "miner" not in kwargs:
         return MINERS_REGISTRY[name](**kwargs)
+    miner = get_miner_by_cfg(kwargs["miner"].copy())
+    del kwargs["miner"]
+    return MINERS_REGISTRY[name](miner=miner, **kwargs)
 
 
 def get_miner_by_cfg(cfg: TCfg) -> ITripletsMiner:

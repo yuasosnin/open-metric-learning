@@ -18,11 +18,8 @@ def test_transforms(aug_name: Optional[str]) -> None:
 
     _ = dataset[0]
 
-    assert True
-
 
 def test_default_transforms() -> None:
     df = pd.read_csv(MOCK_DATASET_PATH / "df.csv")
     dataset = DatasetWithLabels(df=df, dataset_root=MOCK_DATASET_PATH, transform=None)
     _ = dataset[0]
-    assert True

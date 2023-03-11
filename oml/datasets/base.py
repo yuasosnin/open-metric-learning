@@ -119,7 +119,7 @@ class BaseDataset(Dataset):
 
         self.df = df
         self.extra_data = extra_data
-        self.transform = transform if transform else get_transforms("norm_albu")
+        self.transform = transform or get_transforms("norm_albu")
         self.f_imread = f_imread or get_im_reader_for_transforms(transform)
         self.read_bytes_image = (
             lru_cache(maxsize=cache_size)(self._read_bytes_image) if cache_size else self._read_bytes_image
@@ -167,14 +167,12 @@ class BaseDataset(Dataset):
             item[self.categories_key] = row[CATEGORIES_COLUMN]
 
         if self.bboxes_exist:
-            item.update(
-                {
-                    self.x1_key: x1,
-                    self.y1_key: y1,
-                    self.x2_key: x2,
-                    self.y2_key: y2,
-                }
-            )
+            item |= {
+                self.x1_key: x1,
+                self.y1_key: y1,
+                self.x2_key: x2,
+                self.y2_key: y2,
+            }
 
         if self.extra_data:
             for key, record in self.extra_data.items():
@@ -217,12 +215,11 @@ class DatasetWithLabels(BaseDataset, IDatasetWithLabels):
             Label to category mapping if there was category information in DataFrame, None otherwise.
 
         """
-        if CATEGORIES_COLUMN in self.df.columns:
-            label2category = dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
-        else:
-            label2category = None
-
-        return label2category
+        return (
+            dict(zip(self.df[LABELS_COLUMN], self.df[CATEGORIES_COLUMN]))
+            if CATEGORIES_COLUMN in self.df.columns
+            else None
+        )
 
 
 class DatasetQueryGallery(BaseDataset, IDatasetQueryGallery):

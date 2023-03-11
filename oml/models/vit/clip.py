@@ -144,13 +144,12 @@ class ViTCLIPExtractor(IExtractor):
     @classmethod
     def from_pretrained(cls, weights: str) -> "ViTCLIPExtractor":
         pretrained = ViTCLIPExtractor.pretrained_models[weights]
-        clip_extractor = ViTCLIPExtractor(
+        return ViTCLIPExtractor(
             weights=weights,
             arch=pretrained["arch"],
             normalise_features=pretrained["normalise_features"],
             strict_load=True,
         )
-        return clip_extractor
 
 
 def take_visual_part_of_vit_clip(state_dict: TStateDict, needed_keys: Iterable[str]) -> TStateDict:

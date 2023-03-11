@@ -38,9 +38,7 @@ def txt_to_df(fpath: Path) -> pd.DataFrame:
         for col, val in zip(cols, parse_file_row(row)):
             content[col].append(val)
 
-    df = pd.DataFrame(content)
-
-    return df
+    return pd.DataFrame(content)
 
 
 def build_inshop_df(dataset_root: Path, no_bboxes: bool) -> pd.DataFrame:

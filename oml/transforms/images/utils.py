@@ -9,10 +9,7 @@ TTransforms = Union[albu.Compose, t.Compose]
 
 
 def get_im_reader_for_transforms(transforms: Optional[TTransforms]) -> TImReader:
-    if isinstance(transforms, t.Compose):
-        return imread_pillow
-    else:
-        return imread_cv2
+    return imread_pillow if isinstance(transforms, t.Compose) else imread_cv2
 
 
 __all__ = ["TTransforms", "get_im_reader_for_transforms"]

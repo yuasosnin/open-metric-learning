@@ -53,7 +53,7 @@ class BalanceSampler(IBatchSampler):
         unq_labels = set(labels)
 
         assert isinstance(n_labels, int) and isinstance(n_instances, int)
-        assert (1 < n_labels <= len(unq_labels)) and (1 < n_instances)
+        assert 1 < n_labels <= len(unq_labels) and n_instances > 1
         assert all(n > 1 for n in Counter(labels).values()), "Each label should contain at least 2 samples"
 
         self._labels = np.array(labels)

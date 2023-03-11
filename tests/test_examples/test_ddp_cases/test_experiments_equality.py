@@ -45,7 +45,7 @@ def test_epochs_are_equal() -> None:
         )
         params = " ".join(params)
 
-        cmd = f"python {exp_file} " + params
+        cmd = f"python {exp_file} {params}"
         subprocess.run(cmd, check=True, shell=True)
 
         ckpt_path = DummyModule.save_path_ckpt_pattern.format(experiment=experiment)
@@ -84,8 +84,9 @@ TORCH_EPS = 10 * torch.finfo(torch.float32).eps
 def is_equal_models(model1: nn.Module, model2: nn.Module) -> Tuple[bool, List[torch.Tensor]]:
     for module1, module2 in zip(model1.modules(), model2.modules()):
         assert type(module1) == type(module2)
-        if isinstance(module1, nn.Linear):
-            if not torch.all(torch.isclose(module1.weight, module2.weight, atol=TORCH_EPS)):
-                return False, [module1.weight, module2.weight]
+        if isinstance(module1, nn.Linear) and not torch.all(
+            torch.isclose(module1.weight, module2.weight, atol=TORCH_EPS)
+        ):
+            return False, [module1.weight, module2.weight]
 
     return True, []

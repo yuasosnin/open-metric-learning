@@ -32,12 +32,11 @@ TRANSFORMS_TORCH = {
     "norm_resize_hypvit_torch": get_normalisation_resize_hypvit,
 }
 
-TRANSFORMS_REGISTRY = {**TRANSFORMS_ALBU, **TRANSFORMS_TORCH}
+TRANSFORMS_REGISTRY = TRANSFORMS_ALBU | TRANSFORMS_TORCH
 
 
 def get_transforms(name: str, **kwargs: Dict[str, Any]) -> TTransforms:
-    augs = TRANSFORMS_REGISTRY[name](**kwargs)  # type: ignore
-    return augs
+    return TRANSFORMS_REGISTRY[name](**kwargs)
 
 
 def get_transforms_by_cfg(cfg: TCfg) -> TTransforms:

@@ -11,8 +11,9 @@ class IdealOneHotModel(nn.Module):
         self.shift = shift
 
     def forward(self, labels: torch.Tensor) -> torch.Tensor:
-        embeddings = torch.stack([one_hot(label + self.shift, self.emb_dim) for label in labels])
-        return embeddings
+        return torch.stack(
+            [one_hot(label + self.shift, self.emb_dim) for label in labels]
+        )
 
 
 class IdealClusterEncoder(nn.Module):

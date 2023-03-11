@@ -51,8 +51,7 @@ def get_extractor(model_name: str, **kwargs: Dict[str, Any]) -> IExtractor:
 
 def get_extractor_by_cfg(cfg: TCfg) -> IExtractor:
     cfg = dictconfig_to_dict(cfg)
-    extractor = get_extractor(model_name=cfg["name"], **cfg["args"])
-    return extractor
+    return get_extractor(model_name=cfg["name"], **cfg["args"])
 
 
 def get_pairwise_model(model_name: str, **kwargs: Dict[str, Any]) -> IPairwiseModel:
@@ -61,8 +60,7 @@ def get_pairwise_model(model_name: str, **kwargs: Dict[str, Any]) -> IPairwiseMo
 
 def get_pairwise_model_by_cfg(cfg: TCfg) -> IPairwiseModel:
     cfg = dictconfig_to_dict(cfg)
-    pairwise_model = get_pairwise_model(model_name=cfg["name"], **cfg["args"])
-    return pairwise_model
+    return get_pairwise_model(model_name=cfg["name"], **cfg["args"])
 
 
 __all__ = [

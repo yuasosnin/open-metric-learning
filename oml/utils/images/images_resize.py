@@ -116,9 +116,7 @@ def inverse_karesize_bboxes(cur_bboxes: BboxesType, curr_hw: SizeHW, src_hw: Siz
 
     padding = constructor(padding)
 
-    src_bboxes = (cur_bboxes - padding) / scale
-
-    return src_bboxes
+    return (cur_bboxes - padding) / scale
 
 
 def _assert_bbox_type_and_shape(cur_bboxes: BboxesType) -> None:

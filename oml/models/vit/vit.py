@@ -138,11 +138,7 @@ class ViTExtractor(IExtractor):
         self.model.load_state_dict(ckpt, strict=strict_load)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.mscale:
-            x = self._multi_scale(x)
-        else:
-            x = self.model(x)
-
+        x = self._multi_scale(x) if self.mscale else self.model(x)
         if self.normalise_features:
             x = normalise(x)
 
@@ -185,13 +181,12 @@ class ViTExtractor(IExtractor):
             )
 
         pretrained = ViTExtractor.pretrained_models[weights]
-        vit_extractor = ViTExtractor(
+        return ViTExtractor(
             weights=weights,
             arch=pretrained["arch"],  # type: ignore
             normalise_features=pretrained["normalise_features"],  # type: ignore
             strict_load=True,
         )
-        return vit_extractor
 
 
 def vis_vit(vit: ViTExtractor, image: np.ndarray, mean: TNormParam = MEAN, std: TNormParam = STD) -> np.ndarray:

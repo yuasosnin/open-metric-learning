@@ -11,8 +11,10 @@ TTransformsList = List[Union[albu.ImageOnlyTransform, albu.DualTransform]]
 
 
 def get_spatials() -> TTransformsList:
-    spatial_augs = [
-        albu.Perspective(scale=(0.06, 0.07), pad_mode=cv2.BORDER_CONSTANT, pad_val=PAD_COLOR),
+    return [
+        albu.Perspective(
+            scale=(0.06, 0.07), pad_mode=cv2.BORDER_CONSTANT, pad_val=PAD_COLOR
+        ),
         albu.Affine(
             scale=None,
             rotate=(-0.1, +0.1),
@@ -26,46 +28,49 @@ def get_spatials() -> TTransformsList:
             value=PAD_COLOR,
         ),
     ]
-    return spatial_augs
 
 
 def get_blurs() -> TTransformsList:
-    blur_augs = [
+    return [
         albu.MotionBlur(),
         albu.MedianBlur(),
         albu.Blur(),
         albu.GaussianBlur(sigma_limit=(0.7, 2.0)),
     ]
-    return blur_augs
 
 
 def get_colors_level() -> TTransformsList:
-    color_augs = [
-        albu.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.5),
+    return [
+        albu.ColorJitter(
+            brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.5
+        ),
         albu.HueSaturationValue(p=0.1),
         albu.CLAHE(p=0.1),
         albu.Sharpen(p=0.1),
         albu.Emboss(p=0.1),
         albu.RandomBrightnessContrast(p=0.1),
     ]
-    return color_augs
 
 
 def get_noises() -> TTransformsList:
-    noise_augs = [
-        albu.CoarseDropout(max_holes=3, max_height=20, max_width=20, fill_value=PAD_COLOR, p=0.3),
+    return [
+        albu.CoarseDropout(
+            max_holes=3,
+            max_height=20,
+            max_width=20,
+            fill_value=PAD_COLOR,
+            p=0.3,
+        ),
         albu.GaussNoise(p=0.7),
     ]
-    return noise_augs
 
 
 def get_noise_channels() -> TTransformsList:
-    channels_noise_augs = [
+    return [
         albu.ChannelDropout(p=0.1),
         albu.ToGray(p=0.8),
         albu.ChannelShuffle(p=0.1),
     ]
-    return channels_noise_augs
 
 
 class Crop:
@@ -104,10 +109,15 @@ class RandomSizedBBoxSafeCropPatched:
 
 
 def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:
-    augs = albu.Compose(
+    return albu.Compose(
         [
             albu.LongestMaxSize(max_size=im_size),
-            albu.PadIfNeeded(min_height=im_size, min_width=im_size, border_mode=cv2.BORDER_CONSTANT, value=PAD_COLOR),
+            albu.PadIfNeeded(
+                min_height=im_size,
+                min_width=im_size,
+                border_mode=cv2.BORDER_CONSTANT,
+                value=PAD_COLOR,
+            ),
             albu.HorizontalFlip(p=0.5),
             albu.OneOf(get_spatials(), p=0.5),
             albu.OneOf(get_blurs(), p=0.5),
@@ -118,7 +128,6 @@ def get_augs_albu(im_size: int, mean: TNormParam = MEAN, std: TNormParam = STD) 
             ToTensorV2(),
         ],
     )
-    return augs
 
 
 def get_normalisation_albu(mean: TNormParam = MEAN, std: TNormParam = STD) -> albu.Compose:

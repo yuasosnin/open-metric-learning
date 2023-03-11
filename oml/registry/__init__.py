@@ -21,12 +21,11 @@ def show_registry() -> None:
     ]:
         print(f"{name}: ")
 
-        if name == "Augmentations":
-            for k, constructor in registry.items():  # type: ignore
+        for k, constructor in registry.items():
+            if name == "Augmentations":
                 print(f"{k}:", constructor.__class__.__name__ + str(inspect.signature(constructor)))
 
-        else:
-            for k, constructor in registry.items():  # type: ignore
+            else:
                 print(f"{k}:", constructor.__name__ + str(inspect.signature(constructor)))
 
         print()

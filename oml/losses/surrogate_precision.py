@@ -69,7 +69,7 @@ class SurrogatePrecision(torch.nn.Module):
         distances = pairwise_dist(x1=features[is_query], x2=features[is_gallery])
         mask_gt = calc_gt_mask(is_query=is_query, is_gallery=is_gallery, labels=labels)
 
-        loss = 1 - surrogate_precision(
+        return 1 - surrogate_precision(
             distances=distances,
             mask_gt=mask_gt,
             t1=self.temperature1,
@@ -77,5 +77,3 @@ class SurrogatePrecision(torch.nn.Module):
             k=self.k,
             reduction=self.reduction,
         )
-
-        return loss

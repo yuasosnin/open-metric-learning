@@ -43,7 +43,7 @@ def get_images_and_boxes_with_nones() -> Tuple[List[Path], List[Optional[TBBox]]
 
 
 def test_dataset_len(images: List[Path]) -> None:
-    assert len(images) > 0
+    assert images
     dataset = ListDataset(images)
 
     assert len(dataset) == len(images)

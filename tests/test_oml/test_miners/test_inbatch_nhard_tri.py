@@ -56,8 +56,8 @@ def test_all_and_hard_are_specific_cases(
         triplets_from_miner = list(zip(*ids_from_miner))
         triplets_from_nhard_miner = list(zip(*ids_from_nhard_miner))
 
-        assert len(triplets_from_miner) > 0
-        assert len(triplets_from_nhard_miner) > 0
+        assert triplets_from_miner
+        assert triplets_from_nhard_miner
 
         assert set(triplets_from_miner) == set(triplets_from_nhard_miner)
 

@@ -88,15 +88,14 @@ class PairwiseModule(pl.LightningModule):
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:
             return self.optimizer
-        else:
-            scheduler = {
-                "scheduler": self.scheduler,
-                "interval": self.scheduler_interval,
-                "frequency": self.scheduler_frequency,
-            }
-            if isinstance(self.scheduler, ReduceLROnPlateau):
-                scheduler["monitor"] = self.monitor_metric
-            return [self.optimizer], [scheduler]
+        scheduler = {
+            "scheduler": self.scheduler,
+            "interval": self.scheduler_interval,
+            "frequency": self.scheduler_frequency,
+        }
+        if isinstance(self.scheduler, ReduceLROnPlateau):
+            scheduler["monitor"] = self.monitor_metric
+        return [self.optimizer], [scheduler]
 
     def on_epoch_start(self) -> None:
         if self.freeze_n_epochs and isinstance(self.model, IFreezable):

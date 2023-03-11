@@ -20,11 +20,11 @@ def find_value_ids(it: Iterable[Any], value: Any) -> List[int]:
     Returns:
         Indices of the all elements equal to x0
     """
-    if isinstance(it, np.ndarray):
-        inds = list(np.where(it == value)[0])
-    else:  # could be very slow
-        inds = [i for i, el in enumerate(it) if el == value]
-    return inds
+    return (
+        list(np.where(it == value)[0])
+        if isinstance(it, np.ndarray)
+        else [i for i, el in enumerate(it) if el == value]
+    )
 
 
 def set_global_seed(seed: int) -> None:
@@ -61,7 +61,7 @@ def flatten_dict(
     for k, v in d.items():
         if k in ignored_keys:
             continue
-        new_key = str(parent_key) + sep + str(k) if parent_key else str(k)
+        new_key = parent_key + sep + str(k) if parent_key else str(k)
         if isinstance(v, dict):
             items.extend(flatten_dict(v, new_key, sep=sep, ignored_keys=ignored_keys).items())
         else:
@@ -77,16 +77,12 @@ def dictconfig_to_dict(cfg: TCfg) -> Dict[str, Any]:
     if isinstance(cfg, DictConfig):
         cfg = OmegaConf.to_container(cfg, resolve=True)
 
-    ret = dict()
-
-    for k in cfg.keys():
-
-        if isinstance(cfg[k], DictConfig) or isinstance(cfg[k], dict):
-            ret[k] = dictconfig_to_dict(cfg[k])
-        else:
-            ret[k] = cfg[k]
-
-    return ret
+    return {
+        k: dictconfig_to_dict(cfg[k])
+        if isinstance(cfg[k], (DictConfig, dict))
+        else cfg[k]
+        for k in cfg.keys()
+    }
 
 
 def smart_sample(array: List[Any], k: int) -> List[Any]:
@@ -101,14 +97,16 @@ def smart_sample(array: List[Any], k: int) -> List[Any]:
         sampled_items: list of sampled items
     """
     array_size = len(array)
-    if array_size < k:
-        sampled = (
+    return (
+        (
             np.random.choice(array, size=array_size, replace=False).tolist()
-            + np.random.choice(array, size=k - array_size, replace=True).tolist()
+            + np.random.choice(
+                array, size=k - array_size, replace=True
+            ).tolist()
         )
-    else:
-        sampled = np.random.choice(array, size=k, replace=False).tolist()
-    return sampled
+        if array_size < k
+        else np.random.choice(array, size=k, replace=False).tolist()
+    )
 
 
 def clip_max(arr: Tuple[int, ...], max_el: int) -> Tuple[int, ...]:
@@ -129,7 +127,9 @@ def check_if_nonempty_positive_integers(var: Union[int, Sequence[int]], name: st
 
     """
     if isinstance(var, Sequence):
-        if not len(var) > 0 or not all([isinstance(x, int) and (x > 0) for x in var]):
+        if len(var) <= 0 or not all(
+            isinstance(x, int) and (x > 0) for x in var
+        ):
             raise ValueError(f"{name} is expected to be non-empty and contain positive integers, but got {var}")
     elif isinstance(var, int):
         if var <= 0:

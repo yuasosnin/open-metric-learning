@@ -112,17 +112,20 @@ def upload_files_to_neptune_cloud(logger: NeptuneLogger, cfg: TCfg) -> None:
 
 
 def parse_scheduler_from_config(cfg: TCfg, optimizer: torch.optim.Optimizer) -> Dict[str, Any]:
-    if cfg.get("scheduling"):
-        scheduler_kwargs = {
-            "scheduler": get_scheduler_by_cfg(cfg["scheduling"]["scheduler"], **{"optimizer": optimizer}),
+    return (
+        {
+            "scheduler": get_scheduler_by_cfg(
+                cfg["scheduling"]["scheduler"], **{"optimizer": optimizer}
+            ),
             "scheduler_interval": cfg["scheduling"]["scheduler_interval"],
             "scheduler_frequency": cfg["scheduling"]["scheduler_frequency"],
-            "scheduler_monitor_metric": cfg["scheduling"].get("monitor_metric", None),
+            "scheduler_monitor_metric": cfg["scheduling"].get(
+                "monitor_metric", None
+            ),
         }
-    else:
-        scheduler_kwargs = {"scheduler": None}
-
-    return scheduler_kwargs
+        if cfg.get("scheduling")
+        else {"scheduler": None}
+    )
 
 
 def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional[IBatchSampler]:
@@ -133,9 +136,11 @@ def parse_sampler_from_config(cfg: TCfg, dataset: DatasetWithLabels) -> Optional
         )
 
     sampler_runtime_args = {"labels": dataset.get_labels(), "label2category": dataset.get_label2category()}
-    sampler = get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args) if cfg["sampler"] is not None else None
-
-    return sampler
+    return (
+        get_sampler_by_cfg(cfg["sampler"], **sampler_runtime_args)
+        if cfg["sampler"] is not None
+        else None
+    )
 
 
 def parse_ckpt_callback_from_config(cfg: TCfg) -> ModelCheckpoint:

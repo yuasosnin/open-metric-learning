@@ -66,11 +66,6 @@ class PairwisePostprocessor(IDistancesPostprocessor, ABC):
             max_in_new_distances = distances_upd.max(dim=1)[0]
             offset = max_in_new_distances - min_in_old_distances + 1e-5  # we also need some eps if max == min
             distances += offset.unsqueeze(-1)
-        else:
-            # Pairwise postprocessor has been applied to all possible pairs, so, there are no rest distances.
-            # Thus, we don't need to care about order and offset at all.
-            pass
-
         distances = assign_2d(x=distances, indices=ii_top, new_values=distances_upd)
 
         assert list(distances.shape) == [n_queries, n_galleries]

@@ -46,8 +46,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.proj(x1)
         x2 = self.proj(x2)
-        y = elementwise_dist(x1, x2, p=2)
-        return y
+        return elementwise_dist(x1, x2, p=2)
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.forward(x1=x1, x2=x2)

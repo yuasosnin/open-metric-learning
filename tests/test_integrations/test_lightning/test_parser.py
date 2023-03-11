@@ -77,16 +77,13 @@ def test_int_devices_gpu_accelerator(int_devices: int) -> None:
 @pytest.mark.parametrize("no_accelerator", [{}, {"accelerator": None}])
 def test_no_devices_no_accelerator(no_devices: TCfg, no_accelerator: TCfg) -> None:
     cfg = {}  # type: ignore
-    cfg.update(no_devices)
+    cfg |= no_devices
     cfg.update(no_accelerator)
 
     if torch.cuda.is_available():
         accelerator = "gpu"
         devices = torch.cuda.device_count()
-        if devices > 1:
-            strategy = DDPPlugin()
-        else:
-            strategy = None
+        strategy = DDPPlugin() if devices > 1 else None
     else:
         accelerator = "cpu"
         devices = 1
@@ -106,7 +103,7 @@ def test_no_devices_no_accelerator(no_devices: TCfg, no_accelerator: TCfg) -> No
 @pytest.mark.parametrize("no_devices", [{}, {"devices": None}])
 def test_no_devices_cpu_accelerator(no_devices: TCfg) -> None:
     cfg = {"accelerator": "cpu"}
-    cfg.update(no_devices)
+    cfg |= no_devices
 
     expected_params = {"gpus": None, "replace_sampler_ddp": False, "accelerator": "cpu", "devices": 1, "strategy": None}
     compare_params(cfg, expected_params)
@@ -115,7 +112,7 @@ def test_no_devices_cpu_accelerator(no_devices: TCfg) -> None:
 @pytest.mark.parametrize("no_devices", [{}, {"devices": None}])
 def test_no_devices_gpu_accelerator(no_devices: TCfg) -> None:
     cfg = {"accelerator": "gpu"}
-    cfg.update(no_devices)
+    cfg |= no_devices
 
     devices = torch.cuda.device_count() if torch.cuda.is_available() else 1
     expected_params = {
@@ -132,7 +129,7 @@ def test_no_devices_gpu_accelerator(no_devices: TCfg) -> None:
 @pytest.mark.parametrize("int_devices", [1, 2, 4])
 def case_int_devices_no_accelerator(no_accelerator: TCfg, int_devices: int) -> None:
     cfg = {"devices": int_devices}
-    cfg.update(no_accelerator)
+    cfg |= no_accelerator
 
     expected_params = {
         "gpus": None,
@@ -148,7 +145,7 @@ def case_int_devices_no_accelerator(no_accelerator: TCfg, int_devices: int) -> N
 @pytest.mark.parametrize("list_devices", [[1], [1, 2], [0, 3], [0, 1, 2, 5]])
 def case_list_devices_no_accelerator(no_accelerator: TCfg, list_devices: List[int]) -> None:
     cfg = {"devices": list_devices}
-    cfg.update(no_accelerator)
+    cfg |= no_accelerator
 
     accelerator = "gpu" if torch.cuda.is_available() else "cpu"
     devices = len(list_devices) if accelerator == "cpu" else list_devices

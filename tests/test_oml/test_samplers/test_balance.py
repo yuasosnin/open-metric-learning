@@ -71,7 +71,7 @@ def check_balance_batch_sampler_epoch(sampler: BalanceSampler, labels: List[int]
     collected_labels: Set[int] = set()
 
     # emulating of 1 epoch
-    for i, batch_ids in enumerate(sampled_ids):
+    for batch_ids in sampled_ids:
         batch_labels = itemgetter(*batch_ids)(labels)  # type: ignore
 
         labels_counter = Counter(batch_labels)

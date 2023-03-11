@@ -129,12 +129,11 @@ class ResnetExtractor(IExtractor):
 
     def calc_last_conv_channels(self) -> int:
         last_block = self.model.layer4[-1]
-        if self.arch in ("resnet18", "resnet34"):
-            n_out_channels = last_block.conv2.out_channels
-        else:
-            # resnet50, resnet101, resnet152
-            n_out_channels = last_block.conv3.out_channels
-        return n_out_channels
+        return (
+            last_block.conv2.out_channels
+            if self.arch in ("resnet18", "resnet34")
+            else last_block.conv3.out_channels
+        )
 
     @property
     def feat_dim(self) -> int:
@@ -157,20 +156,23 @@ class ResnetExtractor(IExtractor):
         image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
         cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=model_device != "cpu")
         gray_image = cam(image_tensor.unsqueeze(0), "gradcam", None)
-        img_with_grads = show_cam_on_image(image / 255, gray_image)
-        return img_with_grads
+        return show_cam_on_image(image / 255, gray_image)
 
     @classmethod
     def from_pretrained(cls, weights: str) -> "ResnetExtractor":
         if weights.lower().endswith("_default") or weights.lower().endswith("_imagenet_v1"):
             arch = weights.split("_")[0]
-            resnet_extractor = ResnetExtractor(
-                weights=weights, arch=arch, normalise_features=False, gem_p=1, remove_fc=True
+            return ResnetExtractor(
+                weights=weights,
+                arch=arch,
+                normalise_features=False,
+                gem_p=1,
+                remove_fc=True,
             )
 
         else:
             pretrained = ResnetExtractor.pretrained_models[weights]  # type: ignore
-            resnet_extractor = ResnetExtractor(
+            return ResnetExtractor(
                 weights=weights,
                 strict_load=True,
                 arch=pretrained["arch"],  # type: ignore
@@ -178,7 +180,6 @@ class ResnetExtractor(IExtractor):
                 gem_p=pretrained["gem_p"],  # type: ignore
                 remove_fc=pretrained["remove_fc"],  # type: ignore
             )
-        return resnet_extractor
 
 
 def load_moco_model(path_to_model: Path) -> nn.Module:

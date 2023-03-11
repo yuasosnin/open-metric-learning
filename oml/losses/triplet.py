@@ -38,7 +38,7 @@ class TripletLoss(Module):
             need_logs: Set ``True`` if you want to store logs
 
         """
-        assert reduction in ("mean", "sum", "none")
+        assert reduction in {"mean", "sum", "none"}
         assert (margin is None) or (margin > 0)
 
         super(TripletLoss, self).__init__()
@@ -123,7 +123,7 @@ class TripletLossPlain(Module):
             need_logs: Set ``True`` if you want to store logs
 
         """
-        assert reduction in ("mean", "sum", "none")
+        assert reduction in {"mean", "sum", "none"}
         assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
@@ -179,7 +179,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             need_logs: Set ``True`` if you want to store logs
 
         """
-        assert reduction in ("mean", "sum", "none")
+        assert reduction in {"mean", "sum", "none"}
         assert (margin is None) or (margin > 0)
 
         super().__init__()

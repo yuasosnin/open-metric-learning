@@ -15,7 +15,7 @@ def load_requirements(filename: str) -> List[str]:
 def load_version() -> str:
     version_file = Path(__file__).parent / "oml" / "__init__.py"
     with io.open(version_file, encoding="utf-8") as f:
-        return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M).group(1)
+        return re.search(r'^__version__ = [\'"]([^\'"]*)[\'"]', f.read(), re.M)[1]
 
 
 setup(

@@ -45,8 +45,7 @@ def features_and_labels() -> List[Tuple[Tensor, List[int]]]:
     labels_li = generate_valid_labels(num=num_batches)
     labels_list, _, _ = zip(*labels_li)
 
-    features = []
-    for labels in labels_list:
-        features.append(torch.rand(size=(len(labels), features_dim)))
-
+    features = [
+        torch.rand(size=(len(labels), features_dim)) for labels in labels_list
+    ]
     return list(zip(features, labels_list))

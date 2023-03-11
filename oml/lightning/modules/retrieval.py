@@ -70,8 +70,7 @@ class RetrievalModule(pl.LightningModule):
         ), f"Model must be {IFreezable.__name__} to use this."
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        embeddings = self.model(x)
-        return embeddings
+        return self.model(x)
 
     def training_step(self, batch: Dict[str, Any], batch_idx: int) -> torch.Tensor:
         embeddings = self.model(batch[self.input_tensors_key])
@@ -96,15 +95,14 @@ class RetrievalModule(pl.LightningModule):
     def configure_optimizers(self) -> Any:
         if self.scheduler is None:
             return self.optimizer
-        else:
-            scheduler = {
-                "scheduler": self.scheduler,
-                "interval": self.scheduler_interval,
-                "frequency": self.scheduler_frequency,
-            }
-            if isinstance(self.scheduler, ReduceLROnPlateau):
-                scheduler["monitor"] = self.monitor_metric
-            return [self.optimizer], [scheduler]
+        scheduler = {
+            "scheduler": self.scheduler,
+            "interval": self.scheduler_interval,
+            "frequency": self.scheduler_frequency,
+        }
+        if isinstance(self.scheduler, ReduceLROnPlateau):
+            scheduler["monitor"] = self.monitor_metric
+        return [self.optimizer], [scheduler]
 
     def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
         # https://github.com/Lightning-AI/lightning/issues/1595

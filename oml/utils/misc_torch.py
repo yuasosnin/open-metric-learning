@@ -77,9 +77,7 @@ def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
         x1 = x1.unsqueeze(1)
         x2 = x2.unsqueeze(1)
 
-    dist = cdist(x1=x1, x2=x2, p=p).view(len(x1))
-
-    return dist
+    return cdist(x1=x1, x2=x2, p=p).view(len(x1))
 
 
 def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
@@ -255,7 +253,7 @@ class OnlineDict(MutableMapping):  # type: ignore
         return f"{self.__class__.__name__}({output})"
 
     def get_dict_with_results(self) -> Dict[str, float]:
-        return {k: v for k, v in self.items()}
+        return dict(self.items())
 
 
 class OnlineAvgDict(OnlineDict):
@@ -442,8 +440,12 @@ class PCA:
 
         """
         ratio_cumsum = torch.cumsum(self.explained_variance_ratio, dim=0)
-        n_components = torch.searchsorted(ratio_cumsum, torch.tensor(pfc_variance), side="right") + 1
-        return n_components
+        return (
+            torch.searchsorted(
+                ratio_cumsum, torch.tensor(pfc_variance), side="right"
+            )
+            + 1
+        )
 
     def _check_dimensions(self, n_components: int) -> None:
         if n_components > self.components.shape[0]:

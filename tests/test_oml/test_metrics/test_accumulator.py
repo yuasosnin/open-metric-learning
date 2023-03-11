@@ -13,9 +13,7 @@ def get_data(n: int) -> Any:
     ii = list(range(0, n + 10, 10))
     data_as_batches = []
     for ia, ib in zip(ii, ii[1:]):
-        batch = dict()
-        for key in data.keys():
-            batch[key] = data[key][ia:ib]
+        batch = {key: data[key][ia:ib] for key in data}
         data_as_batches.append(batch)
 
     return data, data_as_batches

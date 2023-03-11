@@ -12,8 +12,9 @@ def eye_case() -> Tuple[torch.Tensor, TMetricsDict]:
     embeddings = torch.eye(300, 10, dtype=torch.float)
     embeddings = torch.cat((embeddings, embeddings), dim=1)
 
-    metrics_expected: TMetricsDict = dict()
-    metrics_expected["pcf"] = {0.5: torch.tensor(0.25), 0.9: torch.tensor(0.45)}
+    metrics_expected: TMetricsDict = {
+        "pcf": {0.5: torch.tensor(0.25), 0.9: torch.tensor(0.45)}
+    }
     return embeddings, metrics_expected
 
 

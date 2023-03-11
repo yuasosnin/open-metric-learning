@@ -29,8 +29,7 @@ def get_postprocessor(name: str, **kwargs: Dict[str, Any]) -> IDistancesPostproc
 
 def get_postprocessor_by_cfg(cfg: TCfg) -> IDistancesPostprocessor:
     cfg = dictconfig_to_dict(cfg)
-    postprocessor = get_postprocessor(cfg["name"], **cfg["args"])
-    return postprocessor
+    return get_postprocessor(cfg["name"], **cfg["args"])
 
 
 __all__ = ["get_postprocessor", "get_postprocessor_by_cfg"]

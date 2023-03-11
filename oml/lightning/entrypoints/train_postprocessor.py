@@ -124,7 +124,11 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
 
     loader_train, loader_val = get_loaders_with_embeddings(cfg)
 
-    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+    postprocessor = (
+        get_postprocessor_by_cfg(cfg["postprocessor"])
+        if cfg.get("postprocessor", None)
+        else None
+    )
     assert isinstance(postprocessor, PairwiseImagesPostprocessor), "We support only images processing in this pipeline."
     assert isinstance(postprocessor.model, IPairwiseModel), f"You model must be a child of {IPairwiseModel.__name__}"
 
@@ -133,7 +137,7 @@ def pl_train_postprocessor(cfg: DictConfig) -> None:
     optimizer = get_optimizer_by_cfg(cfg["optimizer"], **{"params": postprocessor.model.parameters()})
 
     module_kwargs = {}
-    module_kwargs.update(parse_scheduler_from_config(cfg, optimizer=optimizer))
+    module_kwargs |= parse_scheduler_from_config(cfg, optimizer=optimizer)
     if is_ddp:
         module_kwargs.update({"loaders_train": loader_train, "loaders_val": loader_val})
         module_constructor = PairwiseModuleDDP

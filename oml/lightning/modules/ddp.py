@@ -34,7 +34,7 @@ class ModuleDDP(pl.LightningModule):
         return self._patch_loaders("val") if self.loaders_val else super(ModuleDDP, self).val_dataloader()
 
     def _patch_loaders(self, mode: str) -> TTrainDataloaders:
-        assert mode in ("train", "val")
+        assert mode in {"train", "val"}
         loaders = self.loaders_train if mode == "train" else self.loaders_val
 
         if isinstance(loaders, DataLoader):

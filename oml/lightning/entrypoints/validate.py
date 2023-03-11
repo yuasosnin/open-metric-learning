@@ -61,7 +61,11 @@ def pl_val(cfg: TCfg) -> Tuple[pl.Trainer, Dict[str, Any]]:
         **module_kwargs
     )
 
-    postprocessor = None if not cfg.get("postprocessor", None) else get_postprocessor_by_cfg(cfg["postprocessor"])
+    postprocessor = (
+        get_postprocessor_by_cfg(cfg["postprocessor"])
+        if cfg.get("postprocessor", None)
+        else None
+    )
 
     # Note! We add the link to our model to a Lightning's Module, so it can recognize it and manipulate its devices
     pl_model.model_link_ = getattr(postprocessor, "model", None)

@@ -60,18 +60,19 @@ class ListDataset(Dataset):
 
     @staticmethod
     def validate_bboxes(bboxes: Optional[TBBoxes], files: Sequence[Path]) -> None:
-        if bboxes is not None:
-            if len(bboxes) != len(files):
-                raise InvalidBBoxesException(f"Number of boxes and files missmatch: {len(bboxes)=} != {len(files)}")
-            for box, file_ in zip(bboxes, files):
-                if box is not None:
-                    if len(box) != 4:
-                        raise InvalidBBoxesException(f"Bbox size does not equal to 4: {box} for image {file_}")
-                    x1, y1, x2, y2 = box
-                    if any(coord < 0 for coord in box):
-                        raise InvalidBBoxesException(f"Bbox coordintates cannot be negative. File: {file_}")
-                    if x2 < x1 or y2 < y1:
-                        raise InvalidBBoxesException(f"Bbox has invalid dimensions for image {file_}")
+        if bboxes is None:
+            return
+        if len(bboxes) != len(files):
+            raise InvalidBBoxesException(f"Number of boxes and files missmatch: {len(bboxes)=} != {len(files)}")
+        for box, file_ in zip(bboxes, files):
+            if box is not None:
+                if len(box) != 4:
+                    raise InvalidBBoxesException(f"Bbox size does not equal to 4: {box} for image {file_}")
+                x1, y1, x2, y2 = box
+                if any(coord < 0 for coord in box):
+                    raise InvalidBBoxesException(f"Bbox coordintates cannot be negative. File: {file_}")
+                if x2 < x1 or y2 < y1:
+                    raise InvalidBBoxesException(f"Bbox has invalid dimensions for image {file_}")
 
     @staticmethod
     def _read_bytes_image(path: Union[Path, str]) -> bytes:
@@ -82,11 +83,7 @@ class ListDataset(Dataset):
         im_path = self.filenames_list[idx]
         img_bytes = self.read_bytes_image(im_path)  # type: ignore
         img = self.f_imread(img_bytes)
-        if self.bboxes is not None:
-            bbox = self.bboxes[idx]
-        else:
-            bbox = None
-
+        bbox = self.bboxes[idx] if self.bboxes is not None else None
         if bbox is None:
             im_h, im_w = img.shape[:2] if isinstance(img, np.ndarray) else img.size[::-1]
             bbox = (0, 0, im_w, im_h)

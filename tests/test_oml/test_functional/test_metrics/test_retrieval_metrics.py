@@ -30,8 +30,7 @@ def naive_cmc(positions: TPositions, k: int) -> torch.Tensor:
     values = torch.empty(len(positions), dtype=torch.bool)
     for query_idx, pos in enumerate(positions):
         values[query_idx] = any(idx < k for idx in pos)
-    metric = torch.mean(values.float())
-    return metric
+    return torch.mean(values.float())
 
 
 def naive_map(positions: TPositions, k: int) -> torch.Tensor:
@@ -41,17 +40,15 @@ def naive_map(positions: TPositions, k: int) -> torch.Tensor:
         values[query_idx] = sum(n_correct_before_j[i] / i * (i - 1 in pos) for i in range(1, k + 1)) / (
             n_correct_before_j[k] or float("inf")
         )
-    metric = torch.mean(values.float())
-    return metric
+    return torch.mean(values.float())
 
 
 def naive_precision(positions: TPositions, k: int) -> torch.Tensor:
     values = torch.empty(len(positions), dtype=torch.float)
     for query_idx, pos in enumerate(positions):
         num_gt = min(len(pos), k)
-        values[query_idx] = sum(1 for idx in pos if idx < k) / num_gt
-    metric = torch.mean(values.float())
-    return metric
+        values[query_idx] = sum(idx < k for idx in pos) / num_gt
+    return torch.mean(values.float())
 
 
 def compare_with_approx_precision(

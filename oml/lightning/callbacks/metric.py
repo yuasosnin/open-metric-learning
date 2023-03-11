@@ -58,13 +58,12 @@ class MetricValCallback(Callback):
     def on_validation_batch_start(
         self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
     ) -> None:
-        if dataloader_idx == self.loader_idx:
-            if not self._ready_to_accumulate:
-                self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
-                self._collected_samples = 0
+        if dataloader_idx == self.loader_idx and not self._ready_to_accumulate:
+            self._expected_samples = self._calc_expected_samples(trainer=trainer, dataloader_idx=dataloader_idx)
+            self._collected_samples = 0
 
-                self.metric.setup(num_samples=self._expected_samples)
-                self._ready_to_accumulate = True
+            self.metric.setup(num_samples=self._expected_samples)
+            self._ready_to_accumulate = True
 
     def on_validation_batch_end(
         self,
@@ -177,9 +176,10 @@ class MetricValCallbackDDP(MetricValCallback):
 
     @staticmethod
     def _check_loaders(trainer: "pl.Trainer") -> None:
-        if trainer.world_size > 1:
-            if not check_loaders_is_patched(trainer.val_dataloaders):
-                raise RuntimeError(err_message_loaders_is_not_patched)
+        if trainer.world_size > 1 and not check_loaders_is_patched(
+            trainer.val_dataloaders
+        ):
+            raise RuntimeError(err_message_loaders_is_not_patched)
 
     def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
         self._check_loaders(trainer)
