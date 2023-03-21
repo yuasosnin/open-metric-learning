@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 from torch import nn
 
@@ -18,7 +17,7 @@ class GEM(nn.Module):
         self.eps = eps
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = torch.clip(x, min=self.eps, max=np.inf)
+        x = torch.clip(x, min=self.eps, max=torch.inf)
         x = torch.pow(x, self.p)
 
         bs, feat_dim, h, w = x.shape
