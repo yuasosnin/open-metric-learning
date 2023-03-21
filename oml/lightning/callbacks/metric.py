@@ -1,7 +1,8 @@
-from math import ceil
+import math
 from typing import Any, Optional
 
 import numpy as np
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from neptune.new.types import File
 from pytorch_lightning import Callback
@@ -52,11 +53,23 @@ class MetricValCallback(Callback):
         self._collected_samples = 0
         self._ready_to_accumulate = False
 
+    @staticmethod
+    def _get_val_dataset_len(trainer: pl.Trainer, dataloader_idx: int):
+        if isinstance(trainer.val_dataloaders, DataLoader):
+            return len(trainer.val_dataloaders.dataset)
+        else:
+            return len(trainer.val_dataloaders[dataloader_idx].dataset)
+
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
-        return self.samples_in_getitem * len(trainer.val_dataloaders[dataloader_idx].dataset)
+        return self.samples_in_getitem * self._get_val_dataset_len(trainer, dataloader_idx)
 
     def on_validation_batch_start(
-        self, trainer: pl.Trainer, pl_module: pl.LightningModule, batch: Any, batch_idx: int, dataloader_idx: int
+        self, 
+        trainer: pl.Trainer, 
+        pl_module: pl.LightningModule, 
+        batch: Any, 
+        batch_idx: int, 
+        dataloader_idx: int = 0,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             if not self._ready_to_accumulate:
@@ -73,7 +86,7 @@ class MetricValCallback(Callback):
         outputs: Optional[STEP_OUTPUT],
         batch: Any,
         batch_idx: int,
-        dataloader_idx: int,
+        dataloader_idx: int = 0,
     ) -> None:
         if dataloader_idx == self.loader_idx:
             assert self._ready_to_accumulate
@@ -162,10 +175,10 @@ class MetricValCallbackDDP(MetricValCallback):
         super().__init__(metric, *args, **kwargs)
 
     def _calc_expected_samples(self, trainer: pl.Trainer, dataloader_idx: int) -> int:
-        len_dataset = len(trainer.val_dataloaders[dataloader_idx].dataset)
+        len_dataset = self._get_val_dataset_len(trainer, dataloader_idx)
         if trainer.world_size > 1:
             # we use padding in DDP and sequential sampler for validation
-            len_dataset = ceil(len_dataset / trainer.world_size)
+            len_dataset = math.ceil(len_dataset / trainer.world_size)
         return self.samples_in_getitem * len_dataset
 
     def calc_and_log_metrics(self, pl_module: pl.LightningModule) -> None:
@@ -176,15 +189,15 @@ class MetricValCallbackDDP(MetricValCallback):
         return super().calc_and_log_metrics(pl_module=pl_module)
 
     @staticmethod
-    def _check_loaders(trainer: "pl.Trainer") -> None:
+    def _check_loaders(trainer: pl.Trainer) -> None:
         if trainer.world_size > 1:
             if not check_loaders_is_patched(trainer.val_dataloaders):
                 raise RuntimeError(err_message_loaders_is_not_patched)
 
-    def on_train_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def on_train_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._check_loaders(trainer)
 
-    def on_validation_start(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
+    def on_validation_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
         self._check_loaders(trainer)
 
 
