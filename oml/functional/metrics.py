@@ -1,6 +1,6 @@
 import warnings
 from collections import defaultdict
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union, Callable
 
 import numpy as np
 import torch
@@ -185,7 +185,10 @@ def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[n
 
 
 def calc_distance_matrix(
-    embeddings: Union[np.ndarray, Tensor], is_query: Union[np.ndarray, Tensor], is_gallery: Union[np.ndarray, Tensor]
+    embeddings: Union[np.ndarray, Tensor], 
+    is_query: Union[np.ndarray, Tensor], 
+    is_gallery: Union[np.ndarray, Tensor],
+    distance: Callable = pairwise_dist
 ) -> Tensor:
     assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
     assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
@@ -198,7 +201,7 @@ def calc_distance_matrix(
     query_embeddings = embeddings[query_mask]
     gallery_embeddings = embeddings[gallery_mask]
 
-    distance_matrix = pairwise_dist(x1=query_embeddings, x2=gallery_embeddings, p=2)
+    distance_matrix = distance(x1=query_embeddings, x2=gallery_embeddings)
 
     return distance_matrix
 

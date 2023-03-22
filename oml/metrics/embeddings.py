@@ -1,6 +1,6 @@
 from copy import deepcopy
 from pprint import pprint
-from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Collection, Dict, Iterable, List, Optional, Tuple, Union, Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,6 +42,7 @@ from oml.interfaces.retrieval import IDistancesPostprocessor
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
+from oml.utils.misc_torch import pairwise_dist
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -71,6 +72,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
         extra_keys: Tuple[str, ...] = (),
+        distance: Callable = pairwise_dist,
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
@@ -122,6 +124,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
         self.pfc_variance = pfc_variance
+        self.distance = distance
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -168,7 +171,7 @@ class EmbeddingMetrics(IMetricVisualisable):
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery)
+        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance=self.distance)
 
         self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
             distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore
