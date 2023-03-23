@@ -201,7 +201,7 @@ def calc_distance_matrix(
     query_embeddings = embeddings[query_mask]
     gallery_embeddings = embeddings[gallery_mask]
 
-    distance_matrix = distance(x1=query_embeddings, x2=gallery_embeddings)
+    distance_matrix = distance(query_embeddings, gallery_embeddings)
 
     return distance_matrix
 
