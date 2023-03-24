@@ -1,10 +1,13 @@
-from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
+
+from collections import defaultdict
+import warnings
 
 import torch
 from torch import Tensor, no_grad
 
 from oml.interfaces.miners import ITripletsMiner
+from oml.interfaces.distances import IDistance
 from oml.miners.inbatch_nhard_tri import NHardTripletsMiner
 from oml.utils.misc_torch import OnlineAvgDict
 
@@ -20,6 +23,7 @@ class MinerWithBank(ITripletsMiner):
         self,
         bank_size_in_batches: int,
         miner: NHardTripletsMiner,
+        distance: Optional[IDistance] = None,
         need_logs: bool = True,
     ):
         """
@@ -35,6 +39,10 @@ class MinerWithBank(ITripletsMiner):
         assert bank_size_in_batches >= 1
         assert isinstance(miner, NHardTripletsMiner)
         self.miner = miner
+        if distance is not None:
+            warnings.warn("Distance provided to MinerWithBank is ignored. Provide it to its miner argument instead.")
+        self.distance = self.miner.distance
+        self._distance_provided = self.miner._distance_provided
 
         self.bank_size_in_batches = bank_size_in_batches
         self.bank_features: Optional[Tensor] = None
@@ -47,6 +55,10 @@ class MinerWithBank(ITripletsMiner):
 
         self.need_logs = need_logs
         self.last_logs: Dict[str, float] = {}
+
+    def _set_distance(self, distance):
+        self.miner._set_distance(distance)
+        super()._set_distance(distance)
 
     @no_grad()
     def __allocate_if_needed(self, features: Tensor, labels: Tensor) -> None:

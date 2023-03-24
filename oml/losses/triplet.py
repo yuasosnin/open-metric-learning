@@ -1,5 +1,7 @@
 from typing import Dict, List, Optional, Tuple, Union
 
+import warnings
+
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -7,9 +9,10 @@ from torch.nn import Module
 from oml.functional.losses import get_reduced
 from oml.interfaces.criterions import ITripletLossWithMiner
 from oml.interfaces.miners import ITripletsMiner, labels2list
+from oml.interfaces.distances import IDistance
 from oml.miners.cross_batch import TripletMinerWithMemory
 from oml.miners.inbatch_all_tri import AllTripletsMiner
-from oml.utils.misc_torch import elementwise_dist
+from oml.distances import EucledianDistance
 
 TLogs = Dict[str, float]
 
@@ -29,7 +32,13 @@ class TripletLoss(Module):
 
     criterion_name = "triplet"  # for better logging
 
-    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
+    def __init__(
+            self, 
+            margin: Optional[float], 
+            distance: Optional[IDistance] = None,
+            reduction: str = "mean", 
+            need_logs: bool = False
+        ):
         """
 
         Args:
@@ -43,6 +52,7 @@ class TripletLoss(Module):
 
         super(TripletLoss, self).__init__()
 
+        self.distance = distance or EucledianDistance(p=2)
         self.margin = margin
         self.reduction = reduction
         self.need_logs = need_logs
@@ -62,8 +72,8 @@ class TripletLoss(Module):
         """
         assert anchor.shape == positive.shape == negative.shape
 
-        positive_dist = elementwise_dist(x1=anchor, x2=positive, p=2)
-        negative_dist = elementwise_dist(x1=anchor, x2=negative, p=2)
+        positive_dist = self.distance.elementwise(anchor, positive)
+        negative_dist = self.distance.elementwise(anchor, negative)
 
         if self.margin is None:
             # here is the soft version of TripletLoss without margin
@@ -114,7 +124,13 @@ class TripletLossPlain(Module):
 
     criterion_name = "triplet"  # for better logging
 
-    def __init__(self, margin: Optional[float], reduction: str = "mean", need_logs: bool = False):
+    def __init__(
+            self, 
+            margin: Optional[float], 
+            distance: Optional[IDistance] = None,
+            reduction: str = "mean", 
+            need_logs: bool = False
+        ):
         """
 
         Args:
@@ -127,10 +143,14 @@ class TripletLossPlain(Module):
         assert (margin is None) or (margin > 0)
 
         super(TripletLossPlain, self).__init__()
-        self.criterion = TripletLoss(margin=margin, reduction=reduction, need_logs=need_logs)
+        self.criterion = TripletLoss(
+            margin=margin, 
+            distance=distance, 
+            reduction=reduction, 
+            need_logs=need_logs)
         self.last_logs = self.criterion.last_logs
 
-    def forward(self, features: torch.Tensor) -> Tensor:
+    def forward(self, features: Tensor) -> Tensor:
         """
 
         Args:
@@ -166,7 +186,8 @@ class TripletLossWithMiner(ITripletLossWithMiner):
     def __init__(
         self,
         margin: Optional[float],
-        miner: ITripletsMiner = AllTripletsMiner(),
+        distance: Optional[IDistance] = None,
+        miner: Optional[ITripletsMiner] = None,
         reduction: str = "mean",
         need_logs: bool = False,
     ):
@@ -183,12 +204,26 @@ class TripletLossWithMiner(ITripletLossWithMiner):
         assert (margin is None) or (margin > 0)
 
         super().__init__()
-        self.tri_loss = TripletLoss(margin=margin, reduction="none", need_logs=need_logs)
-        self.miner = miner
+        self.distance = distance or EucledianDistance(p=2)
+        self.tri_loss = TripletLoss(
+            margin=margin, 
+            distance=self.distance, 
+            reduction="none", 
+            need_logs=need_logs)
+        self.miner = miner or AllTripletsMiner()
+        self._patch_miners_distance()
         self.reduction = reduction
         self.need_logs = need_logs
 
         self.last_logs: Dict[str, float] = {}
+
+    def _patch_miners_distance(self):
+        # this just reduces verbosity of providing distance to both loss and its miner
+        if self.miner.distance != self.distance:
+            if self.miner._distance_provided:
+                warnings.warn(f"Miner was provided with distance ({type(self.miner.distance)}) which is not equal to distance for the loss ({type(self.distance)}). Are you sure?")
+            else:
+                self.miner._set_distance(self.distance)
 
     def forward(self, features: Tensor, labels: Union[Tensor, List[int]]) -> Tensor:
         """
@@ -211,7 +246,7 @@ class TripletLossWithMiner(ITripletLossWithMiner):
             if self.need_logs:
 
                 def avg_d(x1: Tensor, x2: Tensor) -> Tensor:
-                    return elementwise_dist(x1.clone().detach(), x2.clone().detach(), 2).mean()
+                    return self.distance.elementwise(x1.clone().detach(), x2.clone().detach()).mean()
 
                 is_bank_tri = ~is_orig_tri
                 active = (loss.clone().detach() > 0).float()

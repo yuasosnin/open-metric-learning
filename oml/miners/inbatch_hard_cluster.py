@@ -1,16 +1,26 @@
-from collections import Counter
-from typing import List
+from typing import List, Optional
 
-import numpy as np
+from collections import Counter
+
 import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMiner, TLabels, TTriplets, labels2list
+from oml.interfaces.distances import IDistance
+from oml.distances import EucledianDistance
 from oml.utils.misc import find_value_ids
-from oml.utils.misc_torch import pairwise_dist
 
 
 class HardClusterMiner(ITripletsMiner):
+    def __init__(self, distance: Optional[IDistance] = None):
+        self.distance = distance or EucledianDistance(p=2)
+        # this will not let TripletLossWithMiner patch the distance
+        self._distance_provided = True
+        if not isinstance(self.distance, EucledianDistance):
+            raise ValueError(
+                "Distances other than Eucledian are not supported for this miner."
+                f"You provided {type(distance)}.")
+
     """
     This miner selects the hardest triplets based on the distance to mean vectors:
     anchor is a mean vector of features of i-th label in the batch, the hardest positive sample
@@ -57,7 +67,7 @@ class HardClusterMiner(ITripletsMiner):
             Matrix of indices of labels in batch
 
         """
-        unique_labels = sorted(np.unique(labels))
+        unique_labels = sorted(torch.unique(labels))
         labels_number = len(unique_labels)
         labels_mask = torch.zeros(size=(labels_number, len(labels)))
         for label_idx, label in enumerate(unique_labels):
@@ -65,8 +75,7 @@ class HardClusterMiner(ITripletsMiner):
             labels_mask[label_idx][label_indices] = 1
         return labels_mask.type(torch.bool)
 
-    @staticmethod
-    def _count_intra_label_distances(embeddings: Tensor, mean_vectors: Tensor) -> Tensor:
+    def _count_intra_label_distances(self, embeddings: Tensor, mean_vectors: Tensor) -> Tensor:
         """
         Count matrix of distances from mean vector of each label to it's
         samples embeddings.
@@ -85,11 +94,10 @@ class HardClusterMiner(ITripletsMiner):
         # Create (n_labels, n_instances, embed_dim) tensor of mean vectors for each label
         mean_vectors = mean_vectors.unsqueeze(1).repeat((1, n_instances, 1))
         # Count euclidean distance between embeddings and mean vectors
-        distances = torch.pow(embeddings - mean_vectors, 2).sum(2)
+        distances = self.distance.elementwise(embeddings, mean_vectors)
         return distances
 
-    @staticmethod
-    def _count_inter_label_distances(mean_vectors: Tensor) -> Tensor:
+    def _count_inter_label_distances(self, mean_vectors: Tensor) -> Tensor:
         """
         Count matrix of distances from mean vectors of labels to each other
 
@@ -101,7 +109,7 @@ class HardClusterMiner(ITripletsMiner):
             Tensor with the shape of ``[n_labels, n_labels]`` -- matrix of distances between mean vectors
 
         """
-        distance = pairwise_dist(x1=mean_vectors, x2=mean_vectors, p=2)
+        distance = self.distance.pairwise(mean_vectors, mean_vectors)
         return distance
 
     @staticmethod

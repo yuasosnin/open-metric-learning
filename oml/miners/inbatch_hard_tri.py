@@ -5,7 +5,6 @@ from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
 from oml.utils.misc import find_value_ids
-from oml.utils.misc_torch import pairwise_dist
 
 
 class HardTripletsMiner(ITripletsMinerInBatch):
@@ -35,7 +34,7 @@ class HardTripletsMiner(ITripletsMinerInBatch):
 
         features = features.clone().detach()
 
-        dist_mat = pairwise_dist(x1=features, x2=features, p=2)
+        dist_mat = self.distance.pairwise(features, features)
 
         ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(distmat=dist_mat, labels=labels)
 
