@@ -7,9 +7,10 @@ from torch.nn.modules.activation import Sigmoid
 from torchvision.ops import MLP
 
 from oml.interfaces.models import IExtractor, IFreezable, IPairwiseModel
+from oml.interfaces.distances import IDistance
+from oml.distances import EucledianDistance
 from oml.models.utils import remove_prefix_from_state_dict
 from oml.utils.io import download_checkpoint
-from oml.utils.misc_torch import elementwise_dist
 
 
 class LinearTrivialDistanceSiamese(IPairwiseModel):
@@ -18,7 +19,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
 
     """
 
-    def __init__(self, feat_dim: int, identity_init: bool):
+    def __init__(self, feat_dim: int, identity_init: bool, distance: Optional[IDistance] = None):
         """
         Args:
             feat_dim: Expected size of each input.
@@ -28,6 +29,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         """
         super(LinearTrivialDistanceSiamese, self).__init__()
         self.feat_dim = feat_dim
+        self.distance = distance or EucledianDistance(p=2)
 
         self.proj = torch.nn.Linear(in_features=feat_dim, out_features=feat_dim, bias=False)
 
@@ -46,8 +48,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.proj(x1)
         x2 = self.proj(x2)
-        y = elementwise_dist(x1, x2, p=2)
-        return y
+        return self.distance.elementwise(x1, x2)
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.forward(x1=x1, x2=x2)
@@ -147,13 +148,14 @@ class TrivialDistanceSiamese(IPairwiseModel):
 
     pretrained_models: Dict[str, Any] = {}
 
-    def __init__(self, extractor: IExtractor) -> None:
+    def __init__(self, extractor: IExtractor, distance: Optional[IDistance] = None) -> None:
         """
         Args:
             extractor: Instance of ``IExtractor`` (e.g. ``ViTExtractor``)
 
         """
         super(TrivialDistanceSiamese, self).__init__()
+        self.distance = distance or EucledianDistance(p=2)
         self.extractor = extractor
 
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
@@ -168,7 +170,7 @@ class TrivialDistanceSiamese(IPairwiseModel):
         """
         x1 = self.extractor(x1)
         x2 = self.extractor(x2)
-        return elementwise_dist(x1, x2, p=2)
+        return self.distance.elementwise(x1, x2)
 
     def predict(self, x1: Tensor, x2: Tensor) -> Tensor:
         return self.forward(x1=x1, x2=x2)

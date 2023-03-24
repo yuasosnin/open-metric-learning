@@ -6,9 +6,12 @@ import numpy as np
 import torch
 from torch import Tensor
 
+from oml.interfaces.distances import IDistance
 from oml.losses.triplet import get_tri_ids_in_plain
+from oml.distances import EucledianDistance
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
 from oml.utils.misc_torch import PCA, take_2d
+
 
 TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
@@ -184,14 +187,16 @@ def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[n
     return mask_to_ignore
 
 
-def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
+def calculate_accuracy_on_triplets(embeddings: Tensor, distance: Optional[IDistance] = None, reduce_mean: bool = True) -> Tensor:
     assert embeddings.ndim == 2
     assert embeddings.shape[0] % 3 == 0
 
+    distance = distance or EucledianDistance(p=2)
+
     anchor_ii, positive_ii, negative_ii = get_tri_ids_in_plain(n=len(embeddings))
 
-    pos_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[positive_ii])
-    neg_dists = elementwise_dist(x1=embeddings[anchor_ii], x2=embeddings[negative_ii])
+    pos_dists = distance.elementwise(embeddings[anchor_ii], embeddings[positive_ii])
+    neg_dists = distance.elementwise(embeddings[anchor_ii], embeddings[negative_ii])
 
     acc = (pos_dists < neg_dists).float()
 
