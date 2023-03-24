@@ -1,10 +1,9 @@
 from abc import ABC, abstractmethod
 
-import torch.nn as nn
 from torch import Tensor
 
 
-class IDistance(ABC, nn.Module):
+class IDistance(ABC):
     """
     A base interface for difference distance metrics 
     that implement calculating elementwise and pairwise (matrix) distances.
