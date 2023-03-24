@@ -1,8 +1,11 @@
+from typing import List, Tuple, Union, Optional
+
 from abc import ABC, abstractmethod
 from collections import Counter
-from typing import List, Tuple, Union
 
 from torch import Tensor
+from oml.interfaces.distances import IDistance
+from oml.distances import EucledianDistance
 
 TTriplets = Tuple[Tensor, Tensor, Tensor]
 TTripletsIds = Tuple[List[int], List[int], List[int]]
@@ -26,6 +29,13 @@ class ITripletsMiner(ABC):
     An abstraction of triplet miner.
 
     """
+
+    def __init__(self, distance: Optional[IDistance] = None):
+        self.distance = distance or EucledianDistance(p=2)
+        self._distance_provided = distance is not None
+
+    def _set_distance(self, distance):
+        self.distance = distance
 
     @abstractmethod
     def sample(self, features: Tensor, labels: TLabels) -> TTriplets:

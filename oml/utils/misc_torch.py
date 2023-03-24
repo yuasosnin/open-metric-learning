@@ -5,7 +5,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Optional, Tuple, Type, U
 
 import numpy as np
 import torch
-from torch import Tensor, cdist
+from torch import Tensor
 
 from oml.utils.misc import find_first_occurrences
 
@@ -57,45 +57,6 @@ def assign_2d(x: Tensor, indices: Tensor, new_values: Tensor) -> Tensor:
     x[ii, indices] = new_values
 
     return x
-
-
-def elementwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
-    """
-    Args:
-        x1: tensor with the shape of [N, D]
-        x2: tensor with the shape of [N, D]
-        p: degree
-
-    Returns: elementwise distances with the shape of [N]
-
-    """
-    assert len(x1.shape) == len(x2.shape) == 2
-    assert x1.shape == x2.shape
-
-    # we need an extra dim here to avoid pairwise behaviour of torch.cdist
-    if len(x1.shape) == 2:
-        x1 = x1.unsqueeze(1)
-        x2 = x2.unsqueeze(1)
-
-    dist = cdist(x1=x1, x2=x2, p=p).view(len(x1))
-
-    return dist
-
-
-def pairwise_dist(x1: Tensor, x2: Tensor, p: int = 2) -> Tensor:
-    """
-    Args:
-        x1: tensor with the shape of [N, D]
-        x2: tensor with the shape of [M, D]
-        p: degree
-
-    Returns: pairwise distances with the shape of [N, M]
-
-    """
-    assert len(x1.shape) == len(x2.shape) == 2
-    assert x1.shape[-1] == x2.shape[-1]
-
-    return cdist(x1=x1, x2=x2, p=p)
 
 
 def normalise(x: Tensor, p: int = 2) -> Tensor:

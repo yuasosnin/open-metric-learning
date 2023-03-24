@@ -1,9 +1,12 @@
+from typing import Optional
+
 import torch
 from torch import Tensor
 
 from oml.functional.losses import surrogate_precision
 from oml.functional.metrics import calc_gt_mask
-from oml.utils.misc_torch import pairwise_dist
+from oml.interfaces.distances import IDistance
+from oml.distances import EucledianDistance
 
 
 class SurrogatePrecision(torch.nn.Module):
@@ -25,7 +28,13 @@ class SurrogatePrecision(torch.nn.Module):
 
     criterion_name = "surrogate_precision"
 
-    def __init__(self, k: int, temperature1: float = 1.0, temperature2: float = 0.01, reduction: str = "mean"):
+    def __init__(
+            self, 
+            k: int, 
+            temperature1: float = 1.0, 
+            temperature2: float = 0.01, 
+            distance: Optional[IDistance] = None,
+            reduction: str = "mean"):
         """
 
         Args:
@@ -47,9 +56,10 @@ class SurrogatePrecision(torch.nn.Module):
         self.k = k + 1
         self.temperature1 = temperature1
         self.temperature2 = temperature2
+        self.distance = distance or EucledianDistance(p=2)
         self.reduction = reduction
 
-    def forward(self, features: torch.Tensor, labels: Tensor) -> Tensor:
+    def forward(self, features: Tensor, labels: Tensor) -> Tensor:
         """
 
         Args:
@@ -66,7 +76,7 @@ class SurrogatePrecision(torch.nn.Module):
         is_query = torch.ones(bs).bool().to(features.device)
         is_gallery = torch.ones(bs).bool().to(features.device)
 
-        distances = pairwise_dist(x1=features[is_query], x2=features[is_gallery])
+        distances = self.distance.pairwise(features[is_query], features[is_gallery])
         mask_gt = calc_gt_mask(is_query=is_query, is_gallery=is_gallery, labels=labels)
 
         loss = 1 - surrogate_precision(

@@ -30,7 +30,6 @@ from oml.ddp.utils import is_main_process
 from oml.functional.metrics import (
     TMetricsDict,
     apply_mask_to_ignore,
-    calc_distance_matrix,
     calc_gt_mask,
     calc_mask_to_ignore,
     calc_retrieval_metrics,
@@ -39,10 +38,11 @@ from oml.functional.metrics import (
 )
 from oml.interfaces.metrics import IMetricDDP, IMetricVisualisable
 from oml.interfaces.retrieval import IDistancesPostprocessor
+from oml.interfaces.distances import IDistance
+from oml.distances import EucledianDistance
 from oml.metrics.accumulation import Accumulator
 from oml.utils.images.images import get_img_with_bbox, square_pad
 from oml.utils.misc import flatten_dict
-from oml.utils.misc_torch import pairwise_dist
 
 TMetricsDict_ByLabels = Dict[Union[str, int], TMetricsDict]
 
@@ -51,6 +51,28 @@ def validate_dataset(mask_gt: Tensor, mask_to_ignore: Tensor) -> None:
     assert (
         (mask_gt & ~mask_to_ignore).any(1).all()
     ), "There are queries without available correct answers in the gallery!"
+
+
+def calc_distance_matrix(
+    embeddings: Union[np.ndarray, Tensor], 
+    is_query: Union[np.ndarray, Tensor], 
+    is_gallery: Union[np.ndarray, Tensor],
+    distance: IDistance,
+) -> Tensor:
+    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
+    assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
+    assert embeddings.shape[0] == len(is_query) == len(is_gallery)
+
+    embeddings, is_query, is_gallery = map(torch.as_tensor, [embeddings, is_query, is_gallery])
+
+    query_mask = is_query == 1
+    gallery_mask = is_gallery == 1
+    query_embeddings = embeddings[query_mask]
+    gallery_embeddings = embeddings[gallery_mask]
+
+    distance_matrix = distance.pairwise(query_embeddings, gallery_embeddings)
+
+    return distance_matrix
 
 
 class EmbeddingMetrics(IMetricVisualisable):
@@ -72,13 +94,13 @@ class EmbeddingMetrics(IMetricVisualisable):
         is_query_key: str = IS_QUERY_KEY,
         is_gallery_key: str = IS_GALLERY_KEY,
         extra_keys: Tuple[str, ...] = (),
-        distance: Callable = pairwise_dist,
         cmc_top_k: Tuple[int, ...] = (5,),
         precision_top_k: Tuple[int, ...] = (5,),
         map_top_k: Tuple[int, ...] = (5,),
         fmr_vals: Tuple[float, ...] = tuple(),
         pfc_variance: Tuple[float, ...] = (0.5,),
         categories_key: Optional[str] = None,
+        distance: Optional[IDistance] = None,
         postprocessor: Optional[IDistancesPostprocessor] = None,
         metrics_to_exclude_from_visualization: Iterable[str] = (),
         return_only_main_category: bool = False,
@@ -124,7 +146,9 @@ class EmbeddingMetrics(IMetricVisualisable):
         self.map_top_k = map_top_k
         self.fmr_vals = fmr_vals
         self.pfc_variance = pfc_variance
-        self.distance = distance
+
+        self._distance_provided = distance is not None
+        self.distance = distance or EucledianDistance(p=2)
 
         self.categories_key = categories_key
         self.postprocessor = postprocessor
@@ -171,7 +195,8 @@ class EmbeddingMetrics(IMetricVisualisable):
         # Here we handle this case to avoid picking an item itself as the nearest neighbour for itself
         mask_to_ignore = calc_mask_to_ignore(is_query=is_query, is_gallery=is_gallery)
         mask_gt = calc_gt_mask(labels=labels, is_query=is_query, is_gallery=is_gallery)
-        distance_matrix = calc_distance_matrix(embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance=self.distance)
+        distance_matrix = calc_distance_matrix(
+            embeddings=embeddings, is_query=is_query, is_gallery=is_gallery, distance=self.distance)
 
         self.distance_matrix, self.mask_gt = apply_mask_to_ignore(
             distances=distance_matrix, mask_gt=mask_gt, mask_to_ignore=mask_to_ignore

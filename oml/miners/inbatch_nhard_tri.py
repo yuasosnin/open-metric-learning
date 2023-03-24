@@ -5,7 +5,9 @@ import torch
 from torch import Tensor
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TTripletsIds
-from oml.utils.misc_torch import pairwise_dist, take_2d
+from oml.interfaces.distances import IDistance
+from oml.utils.misc_torch import take_2d
+from oml.distances import EucledianDistance
 
 
 class NHardTripletsMiner(ITripletsMinerInBatch):
@@ -25,6 +27,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
 
     def __init__(
         self,
+        distance: Optional[IDistance] = None,
         n_positive: Union[Tuple[int, int], List[int], int] = 1,
         n_negative: Union[Tuple[int, int], List[int], int] = 1,
     ):
@@ -39,6 +42,8 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
             If both parameters are large enough, the miner can be equivalent to ``AllTripletsMiner``
 
         """
+        self.distance = distance or EucledianDistance(p=2)
+        self._distance_provided = distance is not None
 
         self.positive_slice = slice(*self._parse_input_arg(n_positive))
         self.negative_slice = slice(*self._parse_input_arg(n_negative))
@@ -80,7 +85,7 @@ class NHardTripletsMiner(ITripletsMinerInBatch):
         """
         assert features.shape[0] == len(labels)
 
-        dist_mat = pairwise_dist(x1=features, x2=features, p=2)
+        dist_mat = self.distance.pairwise(features, features)
 
         ids_anchor, ids_pos, ids_neg = self._sample_from_distmat(
             distmat=dist_mat, labels=labels, ignore_anchor_mask=ignore_anchor_mask

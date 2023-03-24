@@ -8,7 +8,7 @@ from torch import Tensor
 
 from oml.losses.triplet import get_tri_ids_in_plain
 from oml.utils.misc import check_if_nonempty_positive_integers, clip_max
-from oml.utils.misc_torch import PCA, elementwise_dist, pairwise_dist, take_2d
+from oml.utils.misc_torch import PCA, take_2d
 
 TMetricsDict = Dict[str, Dict[Union[int, float], Union[float, Tensor]]]
 
@@ -182,28 +182,6 @@ def calc_mask_to_ignore(is_query: Union[np.ndarray, Tensor], is_gallery: Union[n
     mask_to_ignore = ids_query[..., None] == ids_gallery[None, ...]
 
     return mask_to_ignore
-
-
-def calc_distance_matrix(
-    embeddings: Union[np.ndarray, Tensor], 
-    is_query: Union[np.ndarray, Tensor], 
-    is_gallery: Union[np.ndarray, Tensor],
-    distance: Callable = pairwise_dist
-) -> Tensor:
-    assert all(isinstance(vector, (np.ndarray, Tensor)) for vector in [embeddings, is_query, is_gallery])
-    assert is_query.ndim == 1 and is_gallery.ndim == 1 and embeddings.ndim == 2
-    assert embeddings.shape[0] == len(is_query) == len(is_gallery)
-
-    embeddings, is_query, is_gallery = map(_to_tensor, [embeddings, is_query, is_gallery])
-
-    query_mask = is_query == 1
-    gallery_mask = is_gallery == 1
-    query_embeddings = embeddings[query_mask]
-    gallery_embeddings = embeddings[gallery_mask]
-
-    distance_matrix = distance(query_embeddings, gallery_embeddings)
-
-    return distance_matrix
 
 
 def calculate_accuracy_on_triplets(embeddings: Tensor, reduce_mean: bool = True) -> Tensor:
