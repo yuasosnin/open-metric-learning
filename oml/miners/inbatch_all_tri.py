@@ -7,6 +7,7 @@ from typing import List
 import torch
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TLabels, TTripletsIds
+from oml.distances import EucledianDistance
 from oml.utils.misc import find_value_ids
 
 
@@ -25,6 +26,7 @@ class AllTripletsMiner(ITripletsMinerInBatch):
             device: the device where to perform computations.
 
         """
+        self.distance = EucledianDistance(p=2)
         self._max_out_triplets = max_output_triplets
         self._device = device
 
