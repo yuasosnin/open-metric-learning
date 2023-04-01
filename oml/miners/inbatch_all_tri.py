@@ -27,6 +27,8 @@ class AllTripletsMiner(ITripletsMinerInBatch):
 
         """
         self.distance = EucledianDistance(p=2)
+        self._distance_provided = False
+        
         self._max_out_triplets = max_output_triplets
         self._device = device
 
