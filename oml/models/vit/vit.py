@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
+from torch import Tensor
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
 
@@ -93,18 +94,18 @@ class ViTExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: Optional[Union[Path, str]],
         arch: str,
-        normalise_features: bool,
+        weights: Optional[Union[Path, str]] = None,
+        normalise_features: bool = False,
         use_multi_scale: bool = False,
         strict_load: bool = True,
     ):
         """
         Args:
+            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options
             weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to
              randomly initialize model's weights. You can check the available pretrained checkpoints
              in ``self.pretrained_models``.
-            arch: Might be one of ``vits8``, ``vits16``, ``vitb8``, ``vitb16``. You can check all the available options
              in ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
             use_multi_scale: Set ``True`` to use multi scale (the analogue of test time augmentations)
@@ -137,7 +138,7 @@ class ViTExtractor(IExtractor):
         ckpt = remove_prefix_from_state_dict(state_dict, trial_key="norm.bias")
         self.model.load_state_dict(ckpt, strict=strict_load)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         if self.mscale:
             x = self._multi_scale(x)
         else:
@@ -152,7 +153,7 @@ class ViTExtractor(IExtractor):
     def feat_dim(self) -> int:
         return len(self.model.norm.bias)
 
-    def _multi_scale(self, samples: torch.Tensor) -> torch.Tensor:
+    def _multi_scale(self, samples: Tensor) -> Tensor:
         # code from the original DINO
         # TODO: check grads later
         v = torch.zeros((len(samples), self.feat_dim), device=samples.device)

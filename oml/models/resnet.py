@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 import torch
+from torch import Tensor
 from pytorch_grad_cam import GradCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torch import nn
@@ -44,20 +45,20 @@ class ResnetExtractor(IExtractor):
 
     def __init__(
         self,
-        weights: Optional[Union[Path, str]],
         arch: str,
-        normalise_features: bool,
-        gem_p: Optional[float],
-        remove_fc: bool,
+        weights: Optional[Union[Path, str]] = None,
+        normalise_features: bool = False,
+        gem_p: Optional[float] = 1.0,
+        remove_fc: bool = True,
         strict_load: bool = True,
     ):
         """
 
         Args:
+            arch: Different types of ResNet, please, check ``self.constructors``
             weights: Path to weights or a special key to download pretrained checkpoint, use ``None`` to randomly
              initialize model's weights or ``default`` to use the checkpoint pretrained on ImageNet.
              You can check the available pretrained checkpoints in ``self.pretrained_models``.
-            arch: Different types of ResNet, please, check ``self.constructors``
             normalise_features: Set ``True`` to normalise output features
             gem_p: Value of power in `Generalized Mean Pooling` that we use as the replacement for the default one
              (if ``gem_p == 1`` it's just a normal average pooling and if ``gem_p -> inf`` it's max-pooling)
@@ -119,7 +120,7 @@ class ResnetExtractor(IExtractor):
         if remove_fc:
             self.model.fc = nn.Identity()
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         x = self.model(x)
 
         if self.normalise_features:
