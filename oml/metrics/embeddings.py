@@ -70,7 +70,8 @@ def calc_distance_matrix(
     query_embeddings = embeddings[query_mask]
     gallery_embeddings = embeddings[gallery_mask]
 
-    distance_matrix = distance.pairwise(query_embeddings, gallery_embeddings)
+    # in case distance has parameters, we need to being it to cpu as embeddings are on it
+    distance_matrix = deepcopy(distance).cpu().pairwise(query_embeddings, gallery_embeddings)
 
     return distance_matrix
 
