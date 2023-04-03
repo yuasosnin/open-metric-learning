@@ -16,6 +16,7 @@ class EucledianDistance(IDistance):
             p: p-norm to calculate metric with
         
         """
+        super().__init__()
         self.p = p
 
     def elementwise(self, x1: Tensor, x2: Tensor) -> Tensor:
