@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+import torch
 from torch import Tensor
 import torch.nn as nn
 
@@ -11,6 +12,9 @@ class IDistance(nn.Module, ABC):
 
     """
 
+    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
+        return self.elementwise(x1, x2)
+    
     @abstractmethod
     def elementwise(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
@@ -23,9 +27,12 @@ class IDistance(nn.Module, ABC):
         """
         raise NotImplementedError()
     
-    @abstractmethod
     def pairwise(self, x1: Tensor, x2: Tensor) -> Tensor:
         """
+        Calculates distance matrix between two batched inputs.
+        Reimplement this method if there is a more efficient way
+        to do it than a loop.
+
         Args:
             x1: tensor with the shape of [N, D]
             x2: tensor with the shape of [M, D]
@@ -33,7 +40,10 @@ class IDistance(nn.Module, ABC):
         Returns: pairwise distances with the shape of [N, M]
 
         """
-        raise NotImplementedError()
-
-    def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
-        return self.elementwise(x1, x2)
+        n = x1.shape[0]
+        m = x2.shape[0]
+        inner = torch.empty((n, m), device=x1.device)
+        for i in range(n):
+            x1_i = x1[i].unsqueeze(0)
+            inner[i, :] = self.elementwise(x1_i, x2)
+        return inner
