@@ -1,10 +1,9 @@
 from itertools import combinations, product
 from operator import itemgetter
-from random import sample
+import random
 from sys import maxsize
 from typing import List
 
-import numpy as np
 import torch
 
 from oml.interfaces.miners import ITripletsMinerInBatch, TLabels, TTripletsIds
@@ -119,8 +118,8 @@ def get_available_triplets(labels: TLabels, max_out_triplets: int = maxsize, dev
     idx_anch, idx_pos = idx_anch_pos.T
 
     # Choose randomly the required number of triplets.
-    random_idx = np.random.choice(len(idx_anch), min(len(idx_anch), max_out_triplets), replace=False)
-    random_idx = torch.tensor(random_idx).to(device)
+    random_idx = random.sample(range(len(idx_anch)), min(len(idx_anch), max_out_triplets))
+    random_idx = torch.tensor(random_idx, dtype=torch.long, device=device)
     idx_anch = idx_anch[random_idx]
     idx_pos = idx_pos[random_idx]
     idx_neg = idx_neg[random_idx]
@@ -150,7 +149,7 @@ def get_available_triplets_naive(labels: List[int], max_out_triplets: int = maxs
         tri = [(a, p, n) for (a, p), n in product(pos_pairs, ids_neg_cur)]
         triplets.extend(tri)
 
-    triplets = sample(triplets, min(len(triplets), max_out_triplets))
+    triplets = random.sample(triplets, min(len(triplets), max_out_triplets))
     ids_anchor, ids_pos, ids_neg = zip(*triplets)
 
     return list(ids_anchor), list(ids_pos), list(ids_neg)

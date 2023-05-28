@@ -98,18 +98,12 @@ class PairwiseModule(pl.LightningModule):
                 scheduler["monitor"] = self.monitor_metric
             return [self.optimizer], [scheduler]
 
-    def on_epoch_start(self) -> None:
+    def on_train_epoch_start(self) -> None:
         if self.freeze_n_epochs and isinstance(self.model, IFreezable):
             if self.current_epoch >= self.freeze_n_epochs:
                 self.model.unfreeze()
             else:
                 self.model.freeze()
-
-    def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
-        # https://github.com/Lightning-AI/lightning/issues/1595
-        tqdm_dict = super().get_progress_bar_dict()
-        tqdm_dict.pop("v_num", None)
-        return tqdm_dict
 
 
 class PairwiseModuleDDP(PairwiseModule, ModuleDDP):

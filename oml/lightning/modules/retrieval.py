@@ -106,13 +106,7 @@ class RetrievalModule(pl.LightningModule):
                 scheduler["monitor"] = self.monitor_metric
             return [self.optimizer], [scheduler]
 
-    def get_progress_bar_dict(self) -> Dict[str, Union[int, str]]:
-        # https://github.com/Lightning-AI/lightning/issues/1595
-        tqdm_dict = super().get_progress_bar_dict()
-        tqdm_dict.pop("v_num", None)
-        return tqdm_dict
-
-    def on_epoch_start(self) -> None:
+    def on_train_epoch_start(self) -> None:
         if self.freeze_n_epochs > 0:
             if not isinstance(self.model, IFreezable):
                 raise ValueError(

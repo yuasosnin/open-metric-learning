@@ -156,8 +156,8 @@ class ResnetExtractor(IExtractor):
         """
         model_device = str(list(self.model.parameters())[0].device)
         image_tensor = get_normalisation_albu()(image=image)["image"].to(model_device)
-        cam = GradCAM(model=self.model, target_layer=self.model.layer4[-1], use_cuda=model_device != "cpu")
-        gray_image = cam(image_tensor.unsqueeze(0), "gradcam", None)
+        cam = GradCAM(self.model, target_layers=[self.model.layer4[-1]], use_cuda=model_device != "cpu")
+        gray_image = cam(image_tensor.unsqueeze(0)).squeeze(0)
         img_with_grads = show_cam_on_image(image / 255, gray_image)
         return img_with_grads
 

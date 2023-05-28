@@ -57,7 +57,7 @@ class LinearTrivialDistanceSiamese(IPairwiseModel):
 class ConcatSiamese(IPairwiseModel, IFreezable):
     """
     This model concatenates two inputs and passes them through
-    a given backbone and applyies a head after that.
+    a given backbone and applies a head after that.
 
     """
 
