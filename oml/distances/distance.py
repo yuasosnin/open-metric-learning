@@ -4,9 +4,9 @@ from torch import Tensor
 from oml.interfaces.distances import IDistance
 
 
-class EucledianDistance(IDistance):
+class EuclideanDistance(IDistance):
     """"
-    Default Eucledian norm distance. Basically torch.cdist.
+    Default Euclidean norm distance. Basically torch.cdist.
 
     """
 
@@ -14,7 +14,7 @@ class EucledianDistance(IDistance):
         """
         Args:
             p: p-norm to calculate metric with
-        
+
         """
         super().__init__()
         self.p = p
